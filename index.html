@@ -1,0 +1,3535 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>chatbaomat</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#07100d">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #080d0b;
+      --panel: rgba(13, 19, 16, 0.78);
+      --panel-strong: rgba(15, 24, 20, 0.92);
+      --soft: rgba(255, 255, 255, 0.075);
+      --soft-2: rgba(255, 255, 255, 0.12);
+      --line: rgba(255, 255, 255, 0.13);
+      --text: #ffe678;
+      --muted: #dccb79;
+      --muted-2: #b4a662;
+      --gold: #ffd84f;
+      --green: #57d27f;
+      --green-dark: #123d2b;
+      --blue: #76ccff;
+      --red: #ff6b6b;
+      --shadow: 0 28px 80px rgba(0, 0, 0, 0.48);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      min-height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    body {
+      margin: 0;
+      height: 100dvh;
+      min-height: 100dvh;
+      font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+      background: #111512;
+      color: var(--text);
+      overflow: hidden;
+      position: fixed;
+      inset: 0;
+      width: 100%;
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: -24vmax;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 8% 0%, rgba(15, 75, 48, 0.58), transparent 34%),
+        radial-gradient(ellipse at 74% 92%, rgba(45, 33, 24, 0.42), transparent 36%),
+        radial-gradient(ellipse at 52% 48%, rgba(14, 31, 23, 0.52), transparent 48%),
+        linear-gradient(135deg, #07100d 0%, #111511 45%, #171411 100%);
+      animation: bgWave 42s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      opacity: 0.42;
+      filter: blur(26px);
+      background:
+        radial-gradient(ellipse at 0% 52%, rgba(38, 102, 66, 0.32), transparent 36%),
+        radial-gradient(ellipse at 84% 8%, rgba(93, 77, 38, 0.18), transparent 30%),
+        linear-gradient(115deg, transparent 0 32%, rgba(255, 255, 255, 0.025) 48%, transparent 66%);
+      animation: bgWave2 56s ease-in-out infinite alternate;
+    }
+
+    @keyframes bgWave {
+      from { transform: translate3d(-2.2%, -1.2%, 0) scale(1); }
+      to { transform: translate3d(2.4%, 1.6%, 0) scale(1.045); }
+    }
+
+    @keyframes bgWave2 {
+      from { transform: translate3d(2%, 1%, 0) scale(1.02); }
+      to { transform: translate3d(-2.8%, -1.7%, 0) scale(1.08); }
+    }
+
+    button,
+    input,
+    textarea {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.45;
+    }
+
+    img {
+      max-width: 100%;
+      display: block;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .beta-badge {
+      position: fixed;
+      top: 10px;
+      right: 12px;
+      z-index: 30;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(255, 216, 79, 0.12);
+      border: 1px solid rgba(255, 216, 79, 0.28);
+      color: var(--gold);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      backdrop-filter: blur(10px);
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      min-height: 100dvh;
+      height: 100dvh;
+      padding: 0;
+      display: grid;
+      place-items: stretch;
+      overflow: hidden;
+    }
+
+    .shell {
+      width: 100%;
+      height: 100dvh;
+      min-height: 100dvh;
+      margin: 0;
+      display: grid;
+      grid-template-columns: 330px minmax(0, 1fr);
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    .sidebar,
+    .details {
+      min-width: 0;
+      background: rgba(8, 13, 11, 0.62);
+      border-color: var(--line);
+    }
+
+    .sidebar {
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr);
+      gap: 14px;
+      padding: 18px;
+      border-right: 1px solid var(--line);
+    }
+
+    .details {
+      display: none;
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      align-content: start;
+      gap: 14px;
+      padding: 18px;
+      border-left: 1px solid var(--line);
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    }
+
+    .me-card {
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 6px 2px;
+      background: transparent;
+      border: 0;
+      box-shadow: none;
+      color: var(--text);
+      text-align: left;
+    }
+
+    .avatar,
+    .chat-avatar {
+      width: 48px;
+      height: 48px;
+      min-width: 48px;
+      min-height: 48px;
+      position: relative;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border-radius: 50%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.22), transparent 34%),
+        linear-gradient(135deg, #244934, #0d1a14);
+      color: #fff;
+      font-weight: 900;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .avatar-frame {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .avatar-frame .chat-avatar,
+    .avatar-frame .avatar,
+    .avatar-action .chat-avatar,
+    .avatar-action .avatar {
+      width: 100%;
+      height: 100%;
+    }
+
+    .online-dot {
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--green);
+      border: 2px solid rgba(6, 10, 8, 0.96);
+      box-shadow: 0 0 12px rgba(87, 210, 127, 0.75);
+      z-index: 2;
+    }
+
+    .avatar-action {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      position: relative;
+      flex: 0 0 auto;
+    }
+
+    .avatar-action:hover {
+      transform: none;
+      filter: brightness(1.12);
+    }
+
+    .mini-avatar.avatar-action {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      overflow: visible;
+    }
+
+    .mini-avatar .avatar-frame {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+    }
+
+    .mini-avatar .chat-avatar,
+    .mini-avatar .avatar-initials,
+    .mini-avatar img {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+    }
+
+    .mini-avatar .online-dot {
+      width: 10px;
+      height: 10px;
+      right: -1px;
+      bottom: -1px;
+    }
+
+    .avatar img,
+    .chat-avatar img,
+    .avatar-action > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .avatar-initials {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: inherit;
+      background:
+        radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.3), transparent 34%),
+        linear-gradient(135deg, var(--g1), var(--g2));
+      color: #fff;
+      font-weight: 950;
+      letter-spacing: 0.03em;
+      line-height: 1;
+      text-align: center;
+    }
+
+    .me-name,
+    .conversation-name,
+    .title {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 900;
+    }
+
+    .hint,
+    .conversation-preview,
+    .meta {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .icon-btn,
+    .pill-btn,
+    .primary,
+    .secondary {
+      min-height: 42px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 16px;
+      color: var(--text);
+      font-weight: 900;
+      border: 1px solid transparent;
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .icon-btn {
+      width: 42px;
+      padding: 0;
+      background: var(--soft);
+      border-color: var(--line);
+    }
+
+    .icon-btn.back-btn,
+    .icon-btn.close-btn {
+      width: 44px;
+      min-height: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .back-btn {
+      overflow: hidden;
+    }
+
+    .close-btn {
+      overflow: hidden;
+    }
+
+    .back-btn img,
+    .close-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      display: block;
+      pointer-events: none;
+      transform: none;
+    }
+
+    .image-btn {
+      overflow: hidden;
+      background: rgba(8, 32, 22, 0.75);
+    }
+
+    .image-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: inherit;
+      pointer-events: none;
+      transform: scale(1.18);
+    }
+
+    .pill-btn,
+    .secondary {
+      background: var(--soft);
+      border-color: var(--line);
+    }
+
+    .primary {
+      color: #07100d;
+      background: linear-gradient(135deg, #ffe678, #6cf39a);
+      border-color: rgba(255, 255, 255, 0.22);
+    }
+
+    .danger {
+      color: #ffe1e1;
+      background: rgba(255, 107, 107, 0.12);
+      border-color: rgba(255, 107, 107, 0.34);
+    }
+
+    .icon-btn:hover,
+    .pill-btn:hover,
+    .primary:hover,
+    .secondary:hover {
+      transform: translateY(-1px);
+      border-color: rgba(255, 255, 255, 0.24);
+    }
+
+    .icon-btn.back-btn:hover,
+    .icon-btn.close-btn:hover {
+      border-color: transparent;
+      filter: brightness(1.08);
+    }
+
+    .search {
+      position: relative;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(4, 7, 6, 0.58);
+      color: #f4f5ed;
+      outline: none;
+      padding: 0 14px;
+    }
+
+    input {
+      min-height: 44px;
+    }
+
+    textarea {
+      min-height: 46px;
+      max-height: 130px;
+      padding: 12px 14px;
+      resize: none;
+      overscroll-behavior: contain;
+    }
+
+    input:focus,
+    textarea:focus {
+      border-color: rgba(87, 210, 127, 0.68);
+      box-shadow: 0 0 0 4px rgba(87, 210, 127, 0.1);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .notify-wrap {
+      position: relative;
+    }
+
+    .notify-badge {
+      position: absolute;
+      top: -7px;
+      right: -6px;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      display: none;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--red);
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 950;
+      border: 2px solid rgba(8, 13, 11, 0.94);
+    }
+
+    .notify-badge.show {
+      display: grid;
+    }
+
+    .conversation-list,
+    .social-list,
+    .member-list,
+    .check-list {
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      display: grid;
+      align-content: start;
+      gap: 8px;
+      padding-right: 2px;
+    }
+
+    .conversation {
+      min-width: 0;
+      display: grid;
+      grid-template-columns: 50px minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 11px;
+      border-radius: 16px;
+      background: transparent;
+      color: var(--text);
+      border: 1px solid transparent;
+      text-align: left;
+    }
+
+    .conversation:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .conversation.active {
+      background: rgba(87, 210, 127, 0.12);
+      border-color: rgba(87, 210, 127, 0.28);
+    }
+
+    .conversation-main {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .conversation-time {
+      color: var(--muted-2);
+      font-size: 0.74rem;
+    }
+
+    .unread {
+      min-width: 22px;
+      height: 22px;
+      padding: 0 7px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--green);
+      color: #061009;
+      font-size: 0.74rem;
+      font-weight: 900;
+    }
+
+    .chat {
+      min-width: 0;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 16%),
+        rgba(7, 11, 9, 0.3);
+    }
+
+    .chat-header {
+      min-width: 0;
+      min-height: 80px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(8, 13, 11, 0.5);
+      backdrop-filter: blur(12px);
+    }
+
+    .mobile-back {
+      display: none;
+    }
+
+    .chat-title {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+    }
+
+    .chat-title h2 {
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: clamp(1.1rem, 2vw, 1.35rem);
+    }
+
+    .presence-dot {
+      width: 8px;
+      height: 8px;
+      display: inline-block;
+      border-radius: 50%;
+      margin-right: 6px;
+      background: var(--muted-2);
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+    }
+
+    .presence-dot.online {
+      background: var(--green);
+      box-shadow: 0 0 14px rgba(87, 210, 127, 0.55);
+    }
+
+    .messages {
+      min-height: 0;
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 22px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .empty-state {
+      align-self: center;
+      justify-self: center;
+      width: min(420px, 100%);
+      display: grid;
+      gap: 10px;
+      justify-items: center;
+      text-align: center;
+      color: var(--muted);
+      padding: 28px;
+    }
+
+    .empty-icon {
+      width: 84px;
+      height: 84px;
+      display: grid;
+      place-items: center;
+      border-radius: 26px;
+      overflow: hidden;
+      background: rgba(87, 210, 127, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
+    }
+
+    .empty-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .message-row {
+      display: grid;
+      grid-template-columns: 32px minmax(0, 1fr);
+      gap: 7px;
+      align-items: end;
+    }
+
+    .message-row.mine {
+      grid-template-columns: minmax(0, 1fr) 32px;
+    }
+
+    .message-row.mine .mini-avatar {
+      grid-column: 2;
+    }
+
+    .message-row.mine .bubble-wrap {
+      grid-column: 1;
+      justify-items: end;
+    }
+
+    .mini-avatar {
+      width: 32px;
+      height: 32px;
+      min-width: 32px;
+      min-height: 32px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      align-self: end;
+      background: rgba(255, 255, 255, 0.09);
+      font-weight: 900;
+      font-size: 0.9rem;
+    }
+
+    .mini-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .bubble-wrap {
+      min-width: 0;
+      display: grid;
+      gap: 3px;
+      justify-items: start;
+    }
+
+    .sender {
+      color: var(--muted);
+      font-size: 0.76rem;
+      padding: 0 2px;
+      line-height: 1;
+    }
+
+    .bubble {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: fit-content;
+      max-width: min(460px, 72vw);
+      justify-self: start;
+      min-height: 34px;
+      padding: 7px 11px;
+      border-radius: 12px 12px 12px 5px;
+      background: rgba(255, 255, 255, 0.095);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 1.08rem;
+      line-height: 1.28;
+      text-align: center;
+      word-break: break-word;
+      white-space: pre-wrap;
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.12);
+    }
+
+    .system-message {
+      justify-self: center;
+      max-width: min(520px, 86vw);
+      padding: 5px 12px;
+      border-radius: 999px;
+      color: rgba(255, 230, 120, 0.94);
+      background: rgba(255, 230, 120, 0.08);
+      border: 1px solid rgba(255, 230, 120, 0.14);
+      font-size: 0.86rem;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .mine .bubble {
+      justify-self: end;
+      border-radius: 12px 12px 5px 12px;
+      color: #06100a;
+      background: linear-gradient(135deg, #e5f9ad, #69e890);
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    .bubble img {
+      width: min(360px, 100%);
+      max-height: 380px;
+      object-fit: cover;
+      border-radius: 14px;
+      margin-top: 4px;
+    }
+
+    .message-meta {
+      color: var(--muted-2);
+      font-size: 0.72rem;
+      padding: 0 4px;
+    }
+
+    .composer {
+      display: grid;
+      gap: 10px;
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--line);
+      background: rgba(8, 13, 11, 0.64);
+      backdrop-filter: blur(12px);
+      transition: transform 0.22s ease;
+    }
+
+    .composer.hidden {
+      display: none;
+    }
+
+    .profile-hero {
+      position: relative;
+      min-height: 280px;
+    }
+
+    .profile-cover {
+      width: 100%;
+      min-height: 280px;
+      border-radius: 18px;
+      overflow: hidden;
+      display: grid;
+      align-items: end;
+      padding: 14px;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.18), transparent 34%),
+        linear-gradient(135deg, #183d2a, #101713 62%, #2d2716);
+      border: 1px solid var(--line);
+      color: var(--text);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .profile-cover.has-image {
+      background-size: cover;
+      background-position: center;
+    }
+
+    .profile-avatar {
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      width: 92px;
+      height: 92px;
+      min-width: 92px;
+      min-height: 92px;
+      padding: 0;
+      border: 4px solid rgba(9, 15, 12, 0.96);
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+      cursor: pointer;
+    }
+
+    .profile-info {
+      position: absolute;
+      left: 126px;
+      right: 18px;
+      bottom: 26px;
+      margin-left: 0;
+      min-height: 42px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.76);
+    }
+
+    .profile-created {
+      position: absolute;
+      right: 16px;
+      bottom: 12px;
+      color: rgba(255, 230, 120, 0.78);
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.72);
+    }
+
+    .profile-bio {
+      min-height: 92px;
+    }
+
+    .username-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .username-row input {
+      min-height: 36px;
+      padding: 0 10px;
+      border-radius: 999px;
+      font-size: 0.88rem;
+    }
+
+    .username-row input[readonly] {
+      opacity: 0.82;
+    }
+
+    .profile-view {
+      display: grid;
+      gap: 14px;
+    }
+
+    .profile-view .profile-hero {
+      min-height: 300px;
+    }
+
+    .profile-view .profile-cover {
+      min-height: 300px;
+      cursor: default;
+    }
+
+    .settings-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .setting-section {
+      display: grid;
+      gap: 10px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--text);
+      font-weight: 900;
+    }
+
+    .toggle-row input {
+      width: 20px;
+      min-height: 20px;
+      accent-color: var(--green);
+      flex: 0 0 auto;
+    }
+
+    .profile-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .install-btn.hidden {
+      display: none;
+    }
+
+    .typing-line {
+      color: var(--green);
+      font-weight: 800;
+    }
+
+    .compose-row {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: end;
+    }
+
+    .preview {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      max-width: 100%;
+      padding: 8px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--line);
+    }
+
+    .preview.show {
+      display: flex;
+    }
+
+    .preview img {
+      width: 74px;
+      height: 58px;
+      object-fit: cover;
+      border-radius: 10px;
+    }
+
+    .details-section {
+      display: grid;
+      gap: 10px;
+    }
+
+    .details-section h3 {
+      margin: 0;
+      color: var(--gold);
+      font-size: 0.95rem;
+    }
+
+    .social-row,
+    .member-row,
+    .check-row {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+    }
+
+    .social-row > span:not(.chat-avatar):not(.avatar-frame),
+    .member-row > span:not(.chat-avatar):not(.avatar-frame),
+    .check-row > span:not(.chat-avatar):not(.avatar-frame) {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .social-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .check-row input {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--green);
+      flex: 0 0 auto;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      place-items: center;
+      padding: 20px;
+      background: rgba(2, 4, 3, 0.62);
+      backdrop-filter: blur(10px);
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    .modal.open {
+      display: grid;
+    }
+
+    .modal-card {
+      width: min(560px, calc(100vw - 32px));
+      max-height: min(820px, calc(100vh - 32px));
+      overflow: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(13, 19, 16, 0.96);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    #profileModal .modal-card,
+    .modal-card.profile-view {
+      width: min(980px, calc(100vw - 32px));
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .modal-head h2 {
+      margin: 0;
+      font-size: 1.2rem;
+    }
+
+    .auth-screen {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .auth-card {
+      width: min(460px, 100%);
+      display: grid;
+      gap: 16px;
+      padding: 24px;
+      border-radius: 28px;
+      background: rgba(8, 13, 11, 0.72);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .auth-logo {
+      width: min(250px, 70vw);
+      margin: 0 auto;
+      border-radius: 14px;
+    }
+
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.065);
+    }
+
+    .auth-tabs button {
+      min-height: 42px;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .auth-tabs button.active {
+      background: rgba(255, 255, 255, 0.13);
+      color: var(--text);
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .remember {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .remember input {
+      width: 18px;
+      min-height: 18px;
+      accent-color: var(--green);
+    }
+
+    @media (max-width: 1040px) {
+      .shell {
+        grid-template-columns: 310px minmax(0, 1fr);
+      }
+
+      .details {
+        display: none;
+      }
+    }
+
+    @media (max-width: 740px) {
+      .app {
+        padding: 0;
+        display: block;
+      }
+
+      .shell {
+        position: relative;
+        width: 100%;
+        height: 100dvh;
+        min-height: 100dvh;
+        max-height: none;
+        border: 0;
+        border-radius: 0;
+        grid-template-columns: 1fr;
+        overflow: hidden;
+      }
+
+      .sidebar {
+        position: absolute;
+        inset: 0;
+        transform: translateX(0);
+        transition: transform 0.28s ease;
+        border-right: 0;
+        min-height: 100dvh;
+        z-index: 1;
+      }
+
+      .chat {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        transform: translateX(100%);
+        transition: transform 0.28s ease;
+        min-height: 100dvh;
+        z-index: 2;
+        opacity: 1;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 18%),
+          #07100d;
+        filter: none;
+        backdrop-filter: none;
+      }
+
+      .shell.chat-open .sidebar {
+        transform: translateX(-28%);
+      }
+
+      .shell.chat-open .chat {
+        transform: translateX(0);
+      }
+
+      .conversation:hover,
+      .conversation.active {
+        background: transparent;
+        border-color: transparent;
+      }
+
+      .conversation:active {
+        background: rgba(87, 210, 127, 0.12);
+        border-color: rgba(87, 210, 127, 0.28);
+      }
+
+      .mobile-back {
+        display: inline-flex;
+      }
+
+      .chat-header {
+        min-height: 168px;
+        padding: 12px 52px 14px;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        align-content: center;
+        text-align: center;
+        gap: 8px;
+        position: relative;
+        background: #07100d;
+        backdrop-filter: none;
+      }
+
+      .chat-header .mobile-back {
+        position: absolute;
+        left: 12px;
+        top: 12px;
+      }
+
+      #activeAvatar.avatar-action {
+        width: 76px;
+        height: 76px;
+      }
+
+      #activeAvatar .avatar-frame {
+        width: 76px;
+        height: 76px;
+      }
+
+      .chat-title {
+        justify-items: center;
+      }
+
+      .chat-title h2 {
+        max-width: min(290px, calc(100vw - 104px));
+        text-align: center;
+        font-size: 1.18rem;
+      }
+
+      .messages {
+        padding: 14px 12px;
+      }
+
+      .message-row {
+        grid-template-columns: 34px minmax(0, 1fr);
+        gap: 6px;
+      }
+
+      .message-row.mine {
+        grid-template-columns: minmax(0, 1fr) 34px;
+      }
+
+      .mini-avatar {
+        width: 30px;
+        height: 30px;
+      }
+
+      .sender {
+        padding-left: 0;
+      }
+
+      .bubble {
+        max-width: 84%;
+      }
+
+      .profile-info {
+        left: 18px;
+        right: 18px;
+        bottom: 20px;
+        padding-left: 108px;
+      }
+
+      .profile-hero {
+        min-height: 176px;
+      }
+
+      .profile-cover,
+      .profile-view .profile-cover {
+        min-height: 176px;
+      }
+
+      .profile-view .profile-hero {
+        min-height: 176px;
+      }
+
+      .username-row,
+      .profile-created {
+        display: none;
+      }
+
+      .composer {
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+        background: #07100d;
+        backdrop-filter: none;
+      }
+
+      .composer.keyboard-open {
+        transform: translateY(-4px);
+      }
+
+      .compose-row {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        gap: 8px;
+      }
+
+      .details {
+        display: none;
+      }
+
+      .brand-logo {
+        width: 138px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="beta-badge">beta</div>
+  <main id="authScreen" class="auth-screen">
+    <section class="auth-card">
+      <img class="auth-logo" src="assets/chatbaomat-logo.png" alt="chatbaomat">
+      <div class="auth-tabs">
+        <button id="loginTab" class="active" type="button">Đăng nhập</button>
+        <button id="registerTab" type="button">Đăng kí</button>
+      </div>
+      <div class="form-grid">
+        <input id="authName" maxlength="24" placeholder="Tên tài khoản" autocomplete="username">
+        <input id="authPassword" type="password" minlength="6" placeholder="Password" autocomplete="current-password">
+        <label class="remember">
+          <input id="rememberLogin" type="checkbox" checked>
+          <span>Ghi nhớ đăng nhập</span>
+        </label>
+        <button id="authSubmit" class="primary" type="button">Đăng nhập</button>
+        <p id="authMessage" class="hint">Đăng nhập để chat với bạn bè.</p>
+      </div>
+    </section>
+  </main>
+
+  <main id="appScreen" class="app hidden">
+    <section id="shell" class="shell">
+      <aside class="sidebar">
+        <button id="meCard" class="me-card" type="button">
+          <span id="meAvatar" class="avatar">?</span>
+          <div>
+            <div id="meName" class="me-name">Người chơi</div>
+            <div id="meStatus" class="hint"><span class="presence-dot online"></span>Online</div>
+          </div>
+        </button>
+
+        <div class="toolbar">
+          <button id="newGroupBtn" class="primary" type="button">+ Nhóm</button>
+          <button id="installAppBtn" class="secondary install-btn hidden" type="button">Tải app</button>
+          <span class="notify-wrap">
+            <button id="openFriendsBtn" class="secondary" type="button">Bạn bè</button>
+            <span id="friendsBadge" class="notify-badge">0</span>
+          </span>
+        </div>
+
+        <div class="search">
+          <input id="conversationSearch" type="search" placeholder="Tìm cuộc trò chuyện..." autocomplete="off">
+        </div>
+
+        <div id="conversationList" class="conversation-list"></div>
+
+      </aside>
+
+      <section class="chat">
+        <header class="chat-header">
+          <button id="mobileBackBtn" class="icon-btn back-btn mobile-back" type="button" aria-label="Quay lại"><img src="assets/back-icon.png" alt=""></button>
+          <button id="activeAvatar" class="avatar-action" type="button" title="Xem profile"><img src="assets/chat-empty-icon.png" alt=""></button>
+          <div class="chat-title">
+            <h2 id="activeTitle">Phiên bản Beta 0.0.1</h2>
+            <p id="activeSubtitle" class="hint"></p>
+          </div>
+        </header>
+
+        <div id="messages" class="messages">
+          <div class="empty-state">
+            <div class="empty-icon"><img src="assets/chat-empty-icon.png" alt=""></div>
+            <div class="title">Cam kết bảo mật và riêng tư.</div>
+          </div>
+        </div>
+
+        <footer id="composer" class="composer hidden">
+          <div id="imagePreview" class="preview">
+            <img id="previewImg" alt="">
+            <button id="clearImageBtn" class="icon-btn close-btn" type="button" aria-label="Xóa ảnh"><img src="assets/close-icon.png" alt=""></button>
+          </div>
+          <div class="compose-row">
+            <input id="imageInput" type="file" accept="image/*" hidden>
+            <button id="pickImageBtn" class="icon-btn image-btn" type="button" title="Gửi ảnh"><img src="assets/image-upload-icon.png" alt=""></button>
+            <textarea id="messageInput" placeholder="Nhập tin nhắn..." autocomplete="off"></textarea>
+            <button id="sendBtn" class="primary" type="button">Gửi</button>
+          </div>
+        </footer>
+      </section>
+
+      <aside id="detailsPanel" class="details">
+        <div class="panel details-section" style="padding: 14px;">
+          <h3>Thông tin</h3>
+          <div id="chatDetails" class="hint">Chọn một cuộc trò chuyện để xem thành viên.</div>
+        </div>
+
+        <div class="panel details-section" style="padding: 14px;">
+          <h3>Thêm bạn</h3>
+          <div class="form-grid">
+            <input id="friendNameInput" maxlength="24" placeholder="Nhập tên tài khoản">
+            <button id="sendFriendRequestBtn" class="primary" type="button">Gửi lời mời</button>
+            <p id="socialMessage" class="hint"></p>
+          </div>
+        </div>
+
+        <div class="panel details-section" style="padding: 14px;">
+          <h3>Lời mời kết bạn</h3>
+          <div id="incomingRequests" class="social-list"></div>
+        </div>
+
+        <div class="panel details-section" style="padding: 14px;">
+          <h3>Bạn bè</h3>
+          <div id="friendList" class="social-list"></div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="profileModal" class="modal">
+    <section class="modal-card">
+      <div class="modal-head">
+        <h2>Profile</h2>
+        <button class="icon-btn close-btn" data-close-modal type="button" aria-label="Đóng"><img src="assets/close-icon.png" alt=""></button>
+      </div>
+      <div class="profile-hero">
+        <button id="profileCover" class="profile-cover" type="button">
+        </button>
+        <button id="profileAvatar" class="avatar profile-avatar" type="button">?</button>
+        <div class="profile-info">
+          <div id="profileName" class="me-name">Người chơi</div>
+          <div class="username-row">
+            <span class="hint">Username</span>
+            <input id="profileUsernameInput" maxlength="24" readonly>
+            <button id="editUsernameBtn" class="icon-btn" type="button" title="Sửa username">✎</button>
+          </div>
+        </div>
+        <span id="profileCreated" class="profile-created"></span>
+      </div>
+      <input id="profileCoverInput" type="file" accept="image/*" hidden>
+      <input id="profileAvatarInput" type="file" accept="image/*" hidden>
+      <textarea id="profileBioInput" class="profile-bio" maxlength="180" placeholder="Viết bio của bạn..."></textarea>
+      <div class="toolbar">
+        <button id="saveProfileBtn" class="primary" type="button">Lưu profile</button>
+        <button id="openSettingsBtn" class="secondary" type="button">Cài đặt</button>
+        <button id="logoutBtn" class="secondary danger" type="button">Đăng xuất</button>
+      </div>
+      <p id="profileMessage" class="hint">Bấm vào avatar hoặc ảnh bìa để đổi ảnh.</p>
+    </section>
+  </div>
+
+  <div id="settingsModal" class="modal">
+    <section class="modal-card">
+      <div class="modal-head">
+        <button id="backToProfileBtn" class="icon-btn back-btn" type="button" aria-label="Quay lại"><img src="assets/back-icon.png" alt=""></button>
+        <h2>Cài đặt</h2>
+        <button class="icon-btn close-btn" data-close-modal type="button" aria-label="Đóng"><img src="assets/close-icon.png" alt=""></button>
+      </div>
+      <div class="settings-grid">
+        <div class="setting-section">
+          <label class="toggle-row">
+            <span>Hiển thị đã xem</span>
+            <input id="showReadToggle" type="checkbox" checked>
+          </label>
+          <label class="toggle-row">
+            <span>Hiển thị online</span>
+            <input id="showOnlineToggle" type="checkbox" checked>
+          </label>
+        </div>
+        <div class="setting-section">
+          <strong>Mã PIN khóa app</strong>
+          <input id="pinInput" type="password" inputmode="numeric" maxlength="8" placeholder="Nhập PIN 4-8 số">
+          <div class="toolbar">
+            <button id="savePinBtn" class="primary" type="button">Lưu PIN</button>
+            <button id="clearPinBtn" class="secondary danger" type="button">Xóa PIN</button>
+          </div>
+        </div>
+        <p id="settingsMessage" class="hint">Khi rời tab và quay lại, app sẽ hỏi PIN nếu đã đặt.</p>
+      </div>
+    </section>
+  </div>
+
+  <div id="pinLockModal" class="modal">
+    <section class="modal-card">
+      <div class="modal-head">
+        <h2>Nhập mã PIN</h2>
+      </div>
+      <input id="pinUnlockInput" type="password" inputmode="numeric" maxlength="8" placeholder="Mã PIN">
+      <button id="unlockPinBtn" class="primary" type="button">Mở khóa</button>
+      <p id="pinLockMessage" class="hint">App đã khóa vì bạn vừa chuyển tab.</p>
+    </section>
+  </div>
+
+  <div id="friendsModal" class="modal">
+    <section class="modal-card">
+      <div class="modal-head">
+        <h2>Bạn bè</h2>
+        <button class="icon-btn close-btn" data-close-modal type="button" aria-label="Đóng"><img src="assets/close-icon.png" alt=""></button>
+      </div>
+      <div class="form-grid">
+        <input id="modalFriendNameInput" maxlength="24" placeholder="Nhập tên tài khoản">
+        <button id="modalSendFriendRequestBtn" class="primary" type="button">Gửi lời mời</button>
+      </div>
+      <div class="details-section">
+        <h3>Lời mời</h3>
+        <div id="modalIncomingRequests" class="social-list"></div>
+      </div>
+      <div class="details-section">
+        <h3>Bạn bè</h3>
+        <div id="modalFriendList" class="social-list"></div>
+      </div>
+    </section>
+  </div>
+
+  <div id="groupModal" class="modal">
+    <section class="modal-card">
+      <div class="modal-head">
+        <h2>Tạo nhóm chat</h2>
+        <button class="icon-btn close-btn" data-close-modal type="button" aria-label="Đóng"><img src="assets/close-icon.png" alt=""></button>
+      </div>
+      <input id="groupNameInput" maxlength="32" placeholder="Tên nhóm">
+      <div id="groupFriendChecks" class="check-list"></div>
+      <button id="createGroupBtn" class="primary" type="button">Tạo nhóm</button>
+      <p id="groupMessage" class="hint"></p>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDzkwxdyfsnbQO8dzfTriPAvVNp3MxBdx0",
+      authDomain: "sever-aa8f6.firebaseapp.com",
+      projectId: "sever-aa8f6",
+      storageBucket: "sever-aa8f6.firebasestorage.app",
+      messagingSenderId: "390722409151",
+      appId: "1:390722409151:web:0e7315236c6820a7c22c0a",
+      measurementId: "G-YMXGJFPJPX"
+    };
+
+    const avatarGradients = [
+      ["#2f7b55", "#0b1711"],
+      ["#7a5cff", "#17223f"],
+      ["#e26f4d", "#2a1110"],
+      ["#2f9aa0", "#08191a"],
+      ["#b7862c", "#21170a"],
+      ["#c64f79", "#24101a"],
+      ["#5b8cff", "#0a172d"],
+      ["#7aa342", "#101b0a"]
+    ];
+    const state = {
+      authMode: "login",
+      user: null,
+      friends: [],
+      incomingRequests: [],
+      sentRequests: [],
+      friendProfiles: {},
+      friendUnsubscribes: {},
+      conversations: [],
+      chatMeta: {},
+      localChatMeta: {},
+      activeConversation: null,
+      messages: [],
+      pendingImage: null,
+      pendingImagePayload: null,
+      pendingImageTask: null,
+      conversationSearch: "",
+      unsubscribes: [],
+      messagesUnsubscribe: null,
+      presenceTimer: null,
+      typingTimer: null,
+      typingActive: false,
+      typingConversation: null,
+      lastTypingWrite: 0,
+      sending: false,
+      pinShouldLock: false
+    };
+
+    let firebaseAuth = null;
+    let firebaseDb = null;
+    let firebaseStorage = null;
+
+    const $ = (selector) => document.querySelector(selector);
+    const authScreen = $("#authScreen");
+    const appScreen = $("#appScreen");
+    const shell = $("#shell");
+    const loginTab = $("#loginTab");
+    const registerTab = $("#registerTab");
+    const authName = $("#authName");
+    const authPassword = $("#authPassword");
+    const rememberLogin = $("#rememberLogin");
+    const authSubmit = $("#authSubmit");
+    const authMessage = $("#authMessage");
+    const installAppBtn = $("#installAppBtn");
+    const meCard = $("#meCard");
+    const meAvatar = $("#meAvatar");
+    const meName = $("#meName");
+    const friendsBadge = $("#friendsBadge");
+    const profileAvatar = $("#profileAvatar");
+    const profileName = $("#profileName");
+    const profileUsernameInput = $("#profileUsernameInput");
+    const editUsernameBtn = $("#editUsernameBtn");
+    const profileMessage = $("#profileMessage");
+    const profileCreated = $("#profileCreated");
+    const profileCover = $("#profileCover");
+    const profileCoverInput = $("#profileCoverInput");
+    const profileAvatarInput = $("#profileAvatarInput");
+    const profileBioInput = $("#profileBioInput");
+    const saveProfileBtn = $("#saveProfileBtn");
+    const openSettingsBtn = $("#openSettingsBtn");
+    const pinInput = $("#pinInput");
+    const savePinBtn = $("#savePinBtn");
+    const clearPinBtn = $("#clearPinBtn");
+    const backToProfileBtn = $("#backToProfileBtn");
+    const showReadToggle = $("#showReadToggle");
+    const showOnlineToggle = $("#showOnlineToggle");
+    const settingsMessage = $("#settingsMessage");
+    const pinUnlockInput = $("#pinUnlockInput");
+    const unlockPinBtn = $("#unlockPinBtn");
+    const pinLockMessage = $("#pinLockMessage");
+    const conversationSearch = $("#conversationSearch");
+    const conversationList = $("#conversationList");
+    const activeAvatar = $("#activeAvatar");
+    const activeTitle = $("#activeTitle");
+    const activeSubtitle = $("#activeSubtitle");
+    const messages = $("#messages");
+    const messageInput = $("#messageInput");
+    const sendBtn = $("#sendBtn");
+    const pickImageBtn = $("#pickImageBtn");
+    const imageInput = $("#imageInput");
+    const imagePreview = $("#imagePreview");
+    const previewImg = $("#previewImg");
+    const clearImageBtn = $("#clearImageBtn");
+    const composer = $("#composer");
+    const chatDetails = $("#chatDetails");
+    const friendNameInput = $("#friendNameInput");
+    const modalFriendNameInput = $("#modalFriendNameInput");
+    const socialMessage = $("#socialMessage");
+    const incomingRequests = $("#incomingRequests");
+    const modalIncomingRequests = $("#modalIncomingRequests");
+    const friendList = $("#friendList");
+    const modalFriendList = $("#modalFriendList");
+    const groupFriendChecks = $("#groupFriendChecks");
+    const groupNameInput = $("#groupNameInput");
+    const groupMessage = $("#groupMessage");
+    let deferredInstallPrompt = null;
+
+    init();
+
+    function init() {
+      loginTab.addEventListener("click", () => setAuthMode("login"));
+      registerTab.addEventListener("click", () => setAuthMode("register"));
+      authSubmit.addEventListener("click", submitAuth);
+      authPassword.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") submitAuth();
+      });
+      rememberLogin.checked = localStorage.getItem("rememberLogin") !== "session";
+      rememberLogin.addEventListener("change", () => {
+        localStorage.setItem("rememberLogin", rememberLogin.checked ? "local" : "session");
+      });
+      $("#logoutBtn").addEventListener("click", logout);
+      meCard.addEventListener("click", () => openModal("#profileModal"));
+      $("#openFriendsBtn").addEventListener("click", () => openModal("#friendsModal"));
+      $("#newGroupBtn").addEventListener("click", () => {
+        renderGroupFriendChecks();
+        openModal("#groupModal");
+      });
+      installAppBtn.addEventListener("click", installApp);
+      setupInstallApp();
+      $("#createGroupBtn").addEventListener("click", createGroupChat);
+      $("#sendFriendRequestBtn").addEventListener("click", () => sendFriendRequest(friendNameInput, socialMessage));
+      $("#modalSendFriendRequestBtn").addEventListener("click", () => sendFriendRequest(modalFriendNameInput, socialMessage));
+      friendNameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") sendFriendRequest(friendNameInput, socialMessage);
+      });
+      modalFriendNameInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") sendFriendRequest(modalFriendNameInput, socialMessage);
+      });
+      conversationSearch.addEventListener("input", () => {
+        state.conversationSearch = conversationSearch.value;
+        renderConversations();
+      });
+      $("#mobileBackBtn").addEventListener("click", () => shell.classList.remove("chat-open"));
+      activeAvatar.addEventListener("click", openActiveAvatarProfile);
+      sendBtn.addEventListener("click", sendMessage);
+      messageInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && shouldEnterSend(event)) {
+          event.preventDefault();
+          sendMessage();
+        }
+      });
+      messageInput.addEventListener("input", handleTypingInput);
+      messageInput.addEventListener("focus", () => composer.classList.add("keyboard-open"));
+      messageInput.addEventListener("blur", () => {
+        composer.classList.remove("keyboard-open");
+        clearTyping();
+      });
+      pickImageBtn.addEventListener("click", () => imageInput.click());
+      imageInput.addEventListener("change", handleImagePick);
+      clearImageBtn.addEventListener("click", clearPendingImage);
+      profileAvatar.addEventListener("click", () => profileAvatarInput.click());
+      profileCover.addEventListener("click", () => profileCoverInput.click());
+      editUsernameBtn.addEventListener("click", enableUsernameEdit);
+      profileAvatarInput.addEventListener("change", updateProfileAvatar);
+      profileCoverInput.addEventListener("change", updateProfileCover);
+      saveProfileBtn.addEventListener("click", saveProfileDetails);
+      openSettingsBtn.addEventListener("click", () => openModal("#settingsModal"));
+      backToProfileBtn.addEventListener("click", () => $("#settingsModal").classList.remove("open"));
+      savePinBtn.addEventListener("click", savePin);
+      clearPinBtn.addEventListener("click", clearPin);
+      showReadToggle.addEventListener("change", savePrivacySettings);
+      showOnlineToggle.addEventListener("change", savePrivacySettings);
+      unlockPinBtn.addEventListener("click", unlockPin);
+      pinUnlockInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") unlockPin();
+      });
+      document.querySelectorAll("[data-close-modal]").forEach((button) => {
+        button.addEventListener("click", closeModals);
+      });
+      document.querySelectorAll(".modal").forEach((modal) => {
+        modal.addEventListener("click", (event) => {
+          if (modal.id === "pinLockModal") return;
+          if (event.target === modal) closeModals();
+        });
+      });
+      initFirebase();
+    }
+
+    function setupInstallApp() {
+      if ("serviceWorker" in navigator && location.protocol !== "file:") {
+        navigator.serviceWorker.register("service-worker.js").catch(() => {});
+      }
+      window.addEventListener("beforeinstallprompt", (event) => {
+        if (isStandaloneApp() || localStorage.getItem("chatAppInstalled") === "yes") return;
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        installAppBtn.classList.remove("hidden");
+      });
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        localStorage.setItem("chatAppInstalled", "yes");
+        installAppBtn.classList.add("hidden");
+      });
+      if (isStandaloneApp() || localStorage.getItem("chatAppInstalled") === "yes") {
+        installAppBtn.classList.add("hidden");
+      }
+    }
+
+    function isStandaloneApp() {
+      return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    }
+
+    async function installApp() {
+      if (!deferredInstallPrompt) {
+        alert("Mở web bằng Chrome ở http://127.0.0.1:3000 hoặc domain HTTPS để tải thành app.");
+        return;
+      }
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice.catch(() => null);
+      if (choice?.outcome === "accepted") {
+        localStorage.setItem("chatAppInstalled", "yes");
+        installAppBtn.classList.add("hidden");
+      }
+      deferredInstallPrompt = null;
+    }
+
+    function initFirebase() {
+      setAuthMode("login");
+      authName.value = localStorage.getItem("accountName") || "";
+      if (!window.firebase?.initializeApp) {
+        authMessage.textContent = "Không tải được Firebase. Cần internet để chat.";
+        return;
+      }
+      try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        firebaseAuth = firebase.auth();
+        firebaseDb = firebase.firestore();
+        try {
+          firebaseStorage = typeof firebase.storage === "function" ? firebase.storage() : null;
+        } catch (_) {
+          firebaseStorage = null;
+        }
+        firebaseAuth.onAuthStateChanged(async (user) => {
+          if (user) {
+            state.user = await loadUserProfile(user);
+            localStorage.setItem("accountName", state.user.name);
+            renderAuthState();
+            await syncUserProfile();
+            startPresence();
+            startSocialListeners();
+          } else {
+            stopSocialListeners();
+            stopPresence();
+            closeModals();
+            state.user = null;
+            state.activeConversation = null;
+            state.messages = [];
+            renderAuthState();
+          }
+        });
+      } catch (error) {
+        authMessage.textContent = error?.message || "Firebase không khởi tạo được.";
+      }
+    }
+
+    function setAuthMode(mode) {
+      state.authMode = mode;
+      loginTab.classList.toggle("active", mode === "login");
+      registerTab.classList.toggle("active", mode === "register");
+      authSubmit.textContent = mode === "login" ? "Đăng nhập" : "Tạo tài khoản";
+      authMessage.textContent = mode === "login" ? "Đăng nhập để chat với bạn bè." : "Tạo tài khoản mới để bắt đầu chat.";
+    }
+
+    async function submitAuth() {
+      const name = cleanName(authName.value);
+      const password = authPassword.value;
+      if (!name || password.length < 6) {
+        authMessage.textContent = "Nhập tên và password ít nhất 6 kí tự.";
+        return;
+      }
+      if (!firebaseAuth || !firebaseDb) {
+        authMessage.textContent = "Firebase chưa sẵn sàng. Hãy mở bằng http://127.0.0.1:3000 và kiểm tra internet.";
+        return;
+      }
+      authSubmit.disabled = true;
+      authMessage.textContent = state.authMode === "login" ? "Đang đăng nhập..." : "Đang tạo tài khoản...";
+      try {
+        await firebaseAuth.setPersistence(
+          rememberLogin.checked ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION
+        );
+        const email = accountEmailFromName(name);
+        if (state.authMode === "register") {
+          const credential = await firebaseAuth.createUserWithEmailAndPassword(email, password);
+          await credential.user.updateProfile({ displayName: name });
+          await firebaseDb.collection("users").doc(credential.user.uid).set({
+            name,
+            usernameKey: accountKeyFromName(name),
+            avatar: "",
+            cover: "",
+            bio: "",
+            nicknames: {},
+            blocked: {},
+            settings: {
+              showRead: true,
+              showOnline: true
+            },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } else {
+          const credential = await firebaseAuth.signInWithEmailAndPassword(email, password);
+          const profileDoc = await firebaseDb.collection("users").doc(credential.user.uid).get();
+          const registeredName = cleanName(profileDoc.exists ? profileDoc.data()?.name : credential.user.displayName);
+          if (registeredName && registeredName !== name) {
+            await firebaseAuth.signOut();
+            authMessage.textContent = "Sai mật khẩu hoặc tên người dùng.";
+            return;
+          }
+        }
+        authPassword.value = "";
+      } catch (error) {
+        authMessage.textContent = state.authMode === "login" ? "Sai mật khẩu hoặc tên người dùng." : authErrorText(error);
+      } finally {
+        authSubmit.disabled = false;
+      }
+    }
+
+    async function loadUserProfile(user) {
+      let name = cleanName(user.displayName || localStorage.getItem("accountName") || user.email?.split("@")[0] || "Người chơi");
+      let avatar = normalizeAvatar(localStorage.getItem("accountAvatar"));
+      let cover = "";
+      let bio = "";
+      let nicknames = {};
+      let blocked = {};
+      let settings = { showRead: true, showOnline: true };
+      let createdAt = null;
+      let usernameKey = accountKeyFromName(name);
+      try {
+        const doc = await firebaseDb.collection("users").doc(user.uid).get();
+        if (doc.exists) {
+          const data = doc.data() || {};
+          name = cleanName(data.name || name);
+          avatar = normalizeAvatar(data.avatar) || avatar;
+          cover = normalizeAvatar(data.cover);
+          bio = cleanName(data.bio || "");
+          nicknames = data.nicknames && typeof data.nicknames === "object" ? data.nicknames : {};
+          blocked = data.blocked && typeof data.blocked === "object" ? data.blocked : {};
+          settings = { showRead: true, showOnline: true, ...(data.settings || {}) };
+          createdAt = data.createdAt || null;
+          usernameKey = data.usernameKey || accountKeyFromName(name);
+        }
+      } catch (_) {}
+      if (avatar) localStorage.setItem("accountAvatar", avatar);
+      else localStorage.removeItem("accountAvatar");
+      return { uid: user.uid, name, avatar, cover, bio, nicknames, blocked, settings, createdAt, usernameKey };
+    }
+
+    async function syncUserProfile() {
+      if (!state.user || !firebaseDb) return;
+      await firebaseDb.collection("users").doc(state.user.uid).set({
+        name: state.user.name,
+        usernameKey: state.user.usernameKey,
+        avatar: normalizeAvatar(state.user.avatar),
+        cover: normalizeAvatar(state.user.cover),
+        bio: state.user.bio || "",
+        nicknames: state.user.nicknames || {},
+        blocked: state.user.blocked || {},
+        settings: state.user.settings || { showRead: true, showOnline: true },
+        presence: {
+          online: true,
+          lastActive: serverTimestamp()
+        },
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    function renderAuthState() {
+      const loggedIn = Boolean(state.user);
+      authScreen.classList.toggle("hidden", loggedIn);
+      appScreen.classList.toggle("hidden", !loggedIn);
+      if (!loggedIn) return;
+      setAvatar(meAvatar, state.user.avatar, state.user.name);
+      setAvatar(profileAvatar, state.user.avatar, state.user.name);
+      meName.textContent = state.user.name;
+      profileName.textContent = state.user.name;
+      renderProfileData();
+      renderConversations();
+      renderSocial();
+      renderActiveChat();
+    }
+
+    async function logout() {
+      closeModals();
+      await updatePresence(false);
+      await firebaseAuth.signOut();
+      authScreen.classList.remove("hidden");
+      appScreen.classList.add("hidden");
+    }
+
+    function startPresence() {
+      stopPresence();
+      updatePresence(true);
+      state.presenceTimer = setInterval(() => updatePresence(true), 25000);
+    }
+
+    function stopPresence() {
+      if (state.presenceTimer) clearInterval(state.presenceTimer);
+      state.presenceTimer = null;
+    }
+
+    async function updatePresence(online) {
+      if (!firebaseDb || !state.user) return;
+      const visibleOnline = Boolean(online && state.user.settings?.showOnline !== false);
+      try {
+        await firebaseDb.collection("users").doc(state.user.uid).set({
+          presence: {
+            online: visibleOnline,
+            lastActive: serverTimestamp()
+          }
+        }, { merge: true });
+      } catch (_) {}
+    }
+
+    function stopSocialListeners() {
+      state.unsubscribes.forEach((unsubscribe) => {
+        try { unsubscribe(); } catch (_) {}
+      });
+      Object.values(state.friendUnsubscribes).forEach((unsubscribe) => {
+        try { unsubscribe(); } catch (_) {}
+      });
+      stopMessages();
+      state.unsubscribes = [];
+      state.friendUnsubscribes = {};
+      state.friendProfiles = {};
+      state.friends = [];
+      state.incomingRequests = [];
+      state.sentRequests = [];
+      state.conversations = [];
+      state.chatMeta = {};
+      state.localChatMeta = {};
+    }
+
+    function stopMessages() {
+      clearTyping();
+      if (state.messagesUnsubscribe) {
+        try { state.messagesUnsubscribe(); } catch (_) {}
+      }
+      state.messagesUnsubscribe = null;
+      state.messages = [];
+    }
+
+    function startSocialListeners() {
+      stopSocialListeners();
+      if (!firebaseDb || !state.user) return;
+      const uid = state.user.uid;
+      const friendshipUnsub = firebaseDb.collection("friendships")
+        .where("uids", "array-contains", uid)
+        .onSnapshot((snapshot) => {
+          state.friends = snapshot.docs.map(friendFromDoc).filter(Boolean);
+          syncFriendProfileListeners();
+          renderSocial();
+          renderConversations();
+          renderDetails();
+        }, showSocialError);
+      const incomingUnsub = firebaseDb.collection("friendRequests")
+        .where("toUid", "==", uid)
+        .onSnapshot((snapshot) => {
+          state.incomingRequests = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) }))
+            .filter((item) => item.status === "pending");
+          renderSocial();
+        }, showSocialError);
+      const sentUnsub = firebaseDb.collection("friendRequests")
+        .where("fromUid", "==", uid)
+        .onSnapshot((snapshot) => {
+          state.sentRequests = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) }))
+            .filter((item) => item.status === "pending");
+        }, showSocialError);
+      const chatsUnsub = firebaseDb.collection("chats")
+        .where("uids", "array-contains", uid)
+        .onSnapshot((snapshot) => {
+          state.chatMeta = {};
+          const groupChats = [];
+          snapshot.docs.forEach((doc) => {
+            const data = doc.data() || {};
+            state.chatMeta[doc.id] = data;
+            if (data.type === "group") groupChats.push(groupFromDoc(doc));
+          });
+          state.conversations = [...directConversations(), ...groupChats]
+            .sort((a, b) => timestampMillis(chatMetaFor(b).lastMessageAt) - timestampMillis(chatMetaFor(a).lastMessageAt));
+          renderConversations();
+          renderDetails();
+          if (state.activeConversation) {
+            const fresh = state.conversations.find((item) => item.id === state.activeConversation.id);
+            if (fresh) state.activeConversation = fresh;
+            renderActiveChat();
+          }
+        }, showSocialError);
+      state.unsubscribes = [friendshipUnsub, incomingUnsub, sentUnsub, chatsUnsub];
+    }
+
+    function syncFriendProfileListeners() {
+      if (!firebaseDb) return;
+      const ids = new Set(state.friends.map((friend) => friend.id));
+      Object.entries(state.friendUnsubscribes).forEach(([id, unsubscribe]) => {
+        if (!ids.has(id)) {
+          try { unsubscribe(); } catch (_) {}
+          delete state.friendUnsubscribes[id];
+          delete state.friendProfiles[id];
+        }
+      });
+      state.friends.forEach((friend) => {
+        if (state.friendUnsubscribes[friend.id]) return;
+        state.friendUnsubscribes[friend.id] = firebaseDb.collection("users").doc(friend.id)
+          .onSnapshot((doc) => {
+            state.friendProfiles[friend.id] = doc.exists ? doc.data() || {} : {};
+            renderSocial();
+            renderConversations();
+            renderDetails();
+          }, showSocialError);
+      });
+    }
+
+    function friendFromDoc(doc) {
+      const data = doc.data() || {};
+      const friendId = (data.uids || []).find((id) => id !== state.user.uid);
+      if (!friendId) return null;
+      const stored = data.users?.[friendId] || {};
+      const live = state.friendProfiles[friendId] || {};
+      return {
+        id: friendId,
+        chatId: doc.id,
+        type: "direct",
+        name: cleanName(live.name || stored.name || "Bạn bè"),
+        avatar: normalizeAvatar(live.avatar) || normalizeAvatar(stored.avatar),
+        presence: live.presence || {}
+      };
+    }
+
+    function directConversations() {
+      return state.friends.map((friend) => enrichFriend(friend)).filter((friend) => !isBlocked(friend.id));
+    }
+
+    function groupFromDoc(doc) {
+      const data = doc.data() || {};
+      return {
+        id: doc.id,
+        chatId: doc.id,
+        type: "group",
+        name: cleanName(data.name || "Nhóm chat"),
+        avatar: data.avatar || "👥",
+        ownerId: data.ownerId || data.createdBy || "",
+        uids: data.uids || [],
+        users: data.users || {}
+      };
+    }
+
+    function enrichFriend(friend) {
+      const live = state.friendProfiles[friend.id] || {};
+      const actualName = cleanName(live.name || friend.name || "Bạn bè");
+      const nickname = cleanName(state.user?.nicknames?.[friend.id] || "");
+      return {
+        ...friend,
+        actualName,
+        nickname,
+        name: nickname || actualName,
+        avatar: normalizeAvatar(live.avatar) || normalizeAvatar(friend.avatar),
+        presence: live.presence || friend.presence || {}
+      };
+    }
+
+    function renderConversations() {
+      if (!state.user) return;
+      const keyword = normalizeSearch(state.conversationSearch);
+      const groupList = state.conversations.filter((item) => item.type === "group");
+      const list = [...directConversations(), ...groupList]
+        .sort((a, b) => timestampMillis(chatMetaFor(b).lastMessageAt) - timestampMillis(chatMetaFor(a).lastMessageAt));
+      const filtered = list.filter((item) => !keyword || normalizeSearch(item.name).includes(keyword));
+      conversationList.innerHTML = "";
+      if (!filtered.length) {
+        conversationList.append(emptyLine(keyword ? "Không tìm thấy cuộc trò chuyện." : "Chưa có bạn bè. Hãy gửi lời mời kết bạn."));
+        return;
+      }
+      filtered.forEach((conversation) => {
+        const meta = chatMetaFor(conversation);
+        const unread = unreadFor(conversation);
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = `conversation${state.activeConversation?.id === conversation.id ? " active" : ""}`;
+        button.innerHTML = `
+          ${avatarPresenceMarkup(conversation.avatar, conversation.name, conversation.type !== "group" && isOnline(conversation))}
+          <span class="conversation-main">
+            <span class="conversation-name">${escapeHtml(conversation.name)}</span>
+            <span class="conversation-preview">${escapeHtml(typingText(conversation) || meta.lastMessage || (conversation.type === "group" ? "Nhóm chat" : presenceText(conversation)))}</span>
+          </span>
+          <span class="conversation-side">
+            <span class="conversation-time">${escapeHtml(shortTime(meta.lastMessageAt))}</span>
+            ${unread ? `<span class="unread">${unread}</span>` : ""}
+          </span>
+        `;
+        button.addEventListener("click", () => openConversation(conversation));
+        conversationList.append(button);
+      });
+    }
+
+    function openConversation(conversation) {
+      if (conversation.type === "direct" && isBlocked(conversation.id)) {
+        alert("Bạn đã chặn người này.");
+        return;
+      }
+      clearTyping();
+      state.activeConversation = conversation;
+      shell.classList.add("chat-open");
+      renderActiveChat();
+      subscribeMessages(conversation);
+      markRead(conversation);
+      renderConversations();
+    }
+
+    function shouldEnterSend(event) {
+      return !event.shiftKey && !event.isComposing && !window.matchMedia("(max-width: 740px)").matches;
+    }
+
+    function handleTypingInput() {
+      const conversation = state.activeConversation;
+      if (!conversation || !state.user || !messageInput.value.trim()) {
+        clearTyping();
+        return;
+      }
+      const now = Date.now();
+      if (!state.typingActive || now - state.lastTypingWrite > 1800) {
+        setTyping(true);
+      }
+      clearTimeout(state.typingTimer);
+      state.typingTimer = setTimeout(clearTyping, 2500);
+    }
+
+    async function setTyping(active) {
+      const conversation = state.activeConversation;
+      await setTypingFor(conversation, active);
+    }
+
+    async function setTypingFor(conversation, active) {
+      if (!conversation || !firebaseDb || !state.user) return;
+      const chatRef = firebaseDb.collection("chats").doc(chatIdFor(conversation));
+      state.typingActive = active;
+      state.typingConversation = conversation;
+      state.lastTypingWrite = Date.now();
+      try {
+        if (active) {
+          await chatRef.set({
+            type: conversation.type,
+            name: conversation.type === "group" ? conversation.name : "",
+            avatar: conversation.type === "group" ? conversation.avatar : "",
+            ownerId: conversation.type === "group" ? conversation.ownerId : "",
+            uids: conversationUids(conversation),
+            users: conversationUsers(conversation),
+            typing: {
+              [state.user.uid]: {
+                name: state.user.name,
+                avatar: normalizeAvatar(state.user.avatar),
+                at: serverTimestamp()
+              }
+            },
+            updatedAt: serverTimestamp()
+          }, { merge: true });
+        } else {
+          await chatRef.update({
+            [`typing.${state.user.uid}`]: firebase.firestore.FieldValue.delete()
+          });
+        }
+      } catch (_) {}
+    }
+
+    function clearTyping() {
+      clearTimeout(state.typingTimer);
+      state.typingTimer = null;
+      if (!state.typingActive || !state.typingConversation) return;
+      const conversation = state.typingConversation;
+      state.typingActive = false;
+      setTypingFor(conversation, false).finally(() => {
+        state.typingConversation = null;
+      });
+    }
+
+    function renderActiveChat() {
+      const conversation = state.activeConversation;
+      if (!conversation) {
+        shell.classList.remove("chat-open");
+        activeAvatar.disabled = true;
+        activeAvatar.innerHTML = `<img src="assets/chat-empty-icon.png" alt="">`;
+        activeTitle.textContent = "Phiên bản Beta 0.0.1";
+        activeSubtitle.textContent = "";
+        sendBtn.disabled = true;
+        messageInput.disabled = true;
+        pickImageBtn.disabled = true;
+        composer.classList.add("hidden");
+        renderEmptyMessages();
+        renderDetails();
+        return;
+      }
+      activeAvatar.disabled = false;
+      composer.classList.remove("hidden");
+      activeAvatar.innerHTML = avatarPresenceMarkup(conversation.avatar, conversation.name, conversation.type !== "group" && isOnline(conversation));
+      activeTitle.textContent = conversation.name;
+      const currentTyping = typingText(conversation);
+      activeSubtitle.innerHTML = currentTyping
+        ? `<span class="typing-line">${escapeHtml(currentTyping)}</span>`
+        : conversation.type === "group"
+          ? `${conversation.uids?.length || 0} thành viên`
+          : `<span class="presence-dot ${isOnline(conversation) ? "online" : ""}"></span>${escapeHtml(presenceText(conversation))}`;
+      sendBtn.disabled = false;
+      messageInput.disabled = false;
+      pickImageBtn.disabled = false;
+      renderMessages();
+      renderDetails();
+    }
+
+    function subscribeMessages(conversation) {
+      stopMessages();
+      state.messagesUnsubscribe = firebaseDb.collection("chats").doc(chatIdFor(conversation))
+        .collection("messages")
+        .orderBy("createdAt", "asc")
+        .limit(120)
+        .onSnapshot((snapshot) => {
+          state.messages = snapshot.docs.map((doc) => ({ id: doc.id, ...(doc.data() || {}) }));
+          markRead(conversation);
+          renderMessages();
+        }, showSocialError);
+    }
+
+    function renderEmptyMessages() {
+      delete messages.dataset.chatId;
+      messages.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><img src="assets/chat-empty-icon.png" alt=""></div>
+            <div class="title">Cam kết bảo mật và riêng tư.</div>
+          </div>
+      `;
+    }
+
+    function renderMessages() {
+      const conversation = state.activeConversation;
+      if (!conversation) {
+        renderEmptyMessages();
+        return;
+      }
+      const chatId = chatIdFor(conversation);
+      const sameChat = messages.dataset.chatId === chatId;
+      const nearBottom = messages.scrollHeight - messages.scrollTop - messages.clientHeight < 140;
+      messages.dataset.chatId = chatId;
+      messages.innerHTML = "";
+      if (!state.messages.length) {
+        messages.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon"><img src="assets/chat-empty-icon.png" alt=""></div>
+            <div class="title">Chưa có tin nhắn</div>
+            <p>Gửi lời chào hoặc chọn ảnh để bắt đầu.</p>
+          </div>
+        `;
+        return;
+      }
+      state.messages.forEach((message) => {
+        if (isBlocked(message.senderId)) return;
+        if (message.type === "system") {
+          const row = document.createElement("div");
+          row.className = "system-message";
+          row.textContent = message.text || "";
+          messages.append(row);
+          return;
+        }
+        const mine = message.senderId === state.user.uid;
+        const row = document.createElement("div");
+        row.className = `message-row${mine ? " mine" : ""}`;
+        row.innerHTML = `
+          <button class="mini-avatar avatar-action" type="button" data-profile-id="${escapeHtml(message.senderId || "")}" data-profile-name="${escapeHtml(message.senderName || "")}" data-profile-avatar="${escapeHtml(message.senderAvatar || "")}">
+            ${avatarPresenceMarkup(message.senderAvatar, message.senderName, isOnlineUid(message.senderId))}
+          </button>
+          <span class="bubble-wrap">
+            ${conversation.type === "group" && !mine ? `<span class="sender">${escapeHtml(message.senderName || "Bạn bè")}</span>` : ""}
+            <span class="bubble">
+              ${message.text ? `<span>${escapeHtml(message.text)}</span>` : ""}
+              ${message.imageUrl || message.imageData ? `<img src="${escapeHtml(message.imageUrl || message.imageData)}" alt="Ảnh đã gửi">` : ""}
+            </span>
+            <span class="message-meta">${escapeHtml(shortTime(message.createdAt))}${mine ? ` · ${escapeHtml(seenText(message, conversation))}` : ""}</span>
+          </span>
+        `;
+        messages.append(row);
+      });
+      bindProfileAvatarClicks(messages);
+      if (!sameChat || nearBottom) messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function sendMessage() {
+      const conversation = state.activeConversation;
+      if (!conversation || !state.user || !firebaseDb || state.sending) return;
+      if (conversation.type === "direct" && isBlocked(conversation.id)) {
+        alert("Bạn đã chặn người này.");
+        return;
+      }
+      const text = cleanMessage(messageInput.value);
+      const file = state.pendingImage;
+      const preparedImagePayload = state.pendingImagePayload;
+      const preparedImageTask = state.pendingImageTask;
+      if (!text && !file) return;
+      state.sending = true;
+      sendBtn.disabled = true;
+      const chatId = chatIdFor(conversation);
+      messageInput.value = "";
+      clearTyping();
+      clearPendingImage();
+      state.localChatMeta[chatId] = {
+        ...(state.localChatMeta[chatId] || {}),
+        lastMessage: text || "Đã gửi một ảnh",
+        lastMessageAt: Date.now(),
+        lastSenderId: state.user.uid,
+        reads: { ...(state.localChatMeta[chatId]?.reads || {}), [state.user.uid]: Date.now() }
+      };
+      renderConversations();
+      try {
+        const imagePayload = file
+          ? preparedImagePayload || await preparedImageTask || await prepareImagePayload(file)
+          : {};
+        const chatRef = firebaseDb.collection("chats").doc(chatId);
+        const users = conversationUsers(conversation);
+        await chatRef.set({
+          type: conversation.type,
+          name: conversation.type === "group" ? conversation.name : "",
+          avatar: conversation.type === "group" ? conversation.avatar : "",
+          ownerId: conversation.type === "group" ? conversation.ownerId : "",
+          uids: conversationUids(conversation),
+          users,
+          updatedAt: serverTimestamp(),
+          lastMessage: text || "Đã gửi một ảnh",
+          lastMessageAt: serverTimestamp(),
+          lastSenderId: state.user.uid,
+          reads: { [state.user.uid]: serverTimestamp() }
+        }, { merge: true });
+        await chatRef.collection("messages").add({
+          senderId: state.user.uid,
+          senderName: state.user.name,
+          senderAvatar: normalizeAvatar(state.user.avatar),
+          text,
+          ...imagePayload,
+          createdAt: serverTimestamp()
+        });
+      } catch (error) {
+        alert(error?.message || "Không gửi được tin nhắn.");
+      } finally {
+        state.sending = false;
+        sendBtn.disabled = false;
+      }
+    }
+
+    async function prepareImagePayload(file) {
+      const dataUrl = await resizeImage(file, 720, 0.64);
+      let fallbackDataUrl = dataUrl;
+      if (fallbackDataUrl.length > 650000) {
+        fallbackDataUrl = await resizeImage(file, 600, 0.6);
+      }
+      if (fallbackDataUrl.length > 650000) {
+        fallbackDataUrl = await resizeImage(file, 480, 0.56);
+      }
+      if (fallbackDataUrl.length > 650000) {
+        throw new Error("Ảnh quá lớn. Hãy chọn ảnh nhỏ hơn.");
+      }
+      return { imageData: fallbackDataUrl };
+    }
+
+    function handleImagePick() {
+      const file = imageInput.files?.[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        alert("Chỉ chọn file ảnh.");
+        return;
+      }
+      state.pendingImage = file;
+      state.pendingImagePayload = null;
+      previewImg.src = URL.createObjectURL(file);
+      imagePreview.classList.add("show");
+      state.pendingImageTask = prepareImagePayload(file)
+        .then((payload) => {
+          if (state.pendingImage === file) state.pendingImagePayload = payload;
+          return payload;
+        })
+        .catch((error) => {
+          if (state.pendingImage === file) {
+            alert(error?.message || "Không xử lý được ảnh.");
+            clearPendingImage();
+          }
+          throw error;
+        });
+      state.pendingImageTask.catch(() => {});
+    }
+
+    function clearPendingImage() {
+      state.pendingImage = null;
+      state.pendingImagePayload = null;
+      state.pendingImageTask = null;
+      imageInput.value = "";
+      previewImg.removeAttribute("src");
+      imagePreview.classList.remove("show");
+    }
+
+    async function updateProfileAvatar() {
+      const file = profileAvatarInput.files?.[0];
+      if (!file || !state.user) return;
+      if (!file.type.startsWith("image/")) {
+        profileMessage.textContent = "Chỉ chọn file ảnh.";
+        return;
+      }
+      profileMessage.textContent = "Đang xử lý ảnh...";
+      try {
+        const dataUrl = await resizeImage(file, 320, 0.82);
+        state.user.avatar = dataUrl;
+        localStorage.setItem("accountAvatar", dataUrl);
+        await firebaseDb.collection("users").doc(state.user.uid).set({ avatar: dataUrl, updatedAt: serverTimestamp() }, { merge: true });
+        await updateFriendshipProfile();
+        renderAuthState();
+        profileMessage.textContent = "Đã đổi avatar.";
+      } catch (error) {
+        profileMessage.textContent = error?.message || "Không đổi được avatar.";
+      } finally {
+        profileAvatarInput.value = "";
+      }
+    }
+
+    async function updateProfileCover() {
+      const file = profileCoverInput.files?.[0];
+      if (!file || !state.user) return;
+      if (!file.type.startsWith("image/")) {
+        profileMessage.textContent = "Chỉ chọn file ảnh.";
+        return;
+      }
+      profileMessage.textContent = "Đang xử lý ảnh bìa...";
+      try {
+        const dataUrl = await resizeImage(file, 1400, 0.8);
+        state.user.cover = dataUrl;
+        await firebaseDb.collection("users").doc(state.user.uid).set({ cover: dataUrl, updatedAt: serverTimestamp() }, { merge: true });
+        renderProfileData();
+        profileMessage.textContent = "Đã đổi ảnh bìa.";
+      } catch (error) {
+        profileMessage.textContent = error?.message || "Không đổi được ảnh bìa.";
+      } finally {
+        profileCoverInput.value = "";
+      }
+    }
+
+    async function saveProfileDetails() {
+      if (!state.user || !firebaseDb) return;
+      const bio = cleanName(profileBioInput.value).slice(0, 180);
+      const usernameKey = accountKeyFromName(profileUsernameInput.value || state.user.usernameKey);
+      if (!usernameKey || usernameKey.length < 2) {
+        profileMessage.textContent = "Username cần ít nhất 2 kí tự.";
+        return;
+      }
+      saveProfileBtn.disabled = true;
+      profileMessage.textContent = "Đang lưu profile...";
+      try {
+        if (usernameKey !== state.user.usernameKey) {
+          const snapshot = await firebaseDb.collection("users")
+            .where("usernameKey", "==", usernameKey)
+            .limit(1)
+            .get();
+          const taken = !snapshot.empty && snapshot.docs[0].id !== state.user.uid;
+          if (taken) {
+            profileMessage.textContent = "Username này đã có người dùng.";
+            profileUsernameInput.value = state.user.usernameKey;
+            profileUsernameInput.readOnly = true;
+            return;
+          }
+        }
+        state.user.bio = bio;
+        state.user.usernameKey = usernameKey;
+        await firebaseDb.collection("users").doc(state.user.uid).set({
+          bio,
+          usernameKey,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        profileUsernameInput.value = state.user.usernameKey;
+        profileUsernameInput.readOnly = true;
+        profileMessage.textContent = "Đã lưu profile.";
+      } catch (error) {
+        profileMessage.textContent = error?.message || "Không lưu được profile.";
+      } finally {
+        saveProfileBtn.disabled = false;
+      }
+    }
+
+    function renderProfileData() {
+      profileBioInput.value = state.user.bio || "";
+      profileUsernameInput.value = state.user.usernameKey || accountKeyFromName(state.user.name);
+      profileUsernameInput.readOnly = true;
+      profileCreated.textContent = state.user.createdAt ? `Tạo ngày ${formatDate(state.user.createdAt)}` : "";
+      showReadToggle.checked = state.user.settings?.showRead !== false;
+      showOnlineToggle.checked = state.user.settings?.showOnline !== false;
+      profileCover.classList.toggle("has-image", Boolean(state.user.cover));
+      if (state.user.cover) {
+        profileCover.style.backgroundImage = `linear-gradient(180deg, transparent, rgba(0,0,0,0.5)), url("${state.user.cover}")`;
+        profileCover.innerHTML = "";
+      } else {
+        profileCover.style.removeProperty("background-image");
+        profileCover.innerHTML = "";
+      }
+    }
+
+    function enableUsernameEdit() {
+      profileUsernameInput.readOnly = false;
+      profileUsernameInput.focus();
+      profileUsernameInput.select();
+      profileMessage.textContent = "Sửa Username rồi bấm Lưu profile.";
+    }
+
+    async function updateFriendshipProfile() {
+      const profile = { name: state.user.name, avatar: normalizeAvatar(state.user.avatar) };
+      await Promise.all(state.friends.map((friend) =>
+        firebaseDb.collection("friendships").doc(friend.chatId).set({
+          users: { [state.user.uid]: profile },
+          updatedAt: serverTimestamp()
+        }, { merge: true })
+      ));
+    }
+
+    async function sendFriendRequest(input, output) {
+      const targetName = cleanName(input.value);
+      const targetKey = accountKeyFromName(targetName);
+      if (!targetName) {
+        output.textContent = "Nhập tên bạn bè trước.";
+        return;
+      }
+      if (targetKey === state.user.usernameKey) {
+        output.textContent = "Không thể tự kết bạn.";
+        return;
+      }
+      try {
+        output.textContent = "Đang tìm tài khoản...";
+        const snapshot = await firebaseDb.collection("users")
+          .where("usernameKey", "==", targetKey)
+          .limit(1)
+          .get();
+        if (snapshot.empty) {
+          output.textContent = "Không tìm thấy tài khoản này.";
+          return;
+        }
+        const targetDoc = snapshot.docs[0];
+        const target = { uid: targetDoc.id, ...(targetDoc.data() || {}) };
+        if (state.friends.some((friend) => friend.id === target.uid)) {
+          output.textContent = "Hai người đã là bạn bè rồi.";
+          return;
+        }
+        const requestId = pairId(state.user.uid, target.uid);
+        await firebaseDb.collection("friendRequests").doc(requestId).set({
+          fromUid: state.user.uid,
+          fromName: state.user.name,
+          fromAvatar: normalizeAvatar(state.user.avatar),
+          toUid: target.uid,
+          toName: cleanName(target.name || targetName),
+          toAvatar: normalizeAvatar(target.avatar),
+          status: "pending",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        input.value = "";
+        output.textContent = "Đã gửi lời mời.";
+      } catch (error) {
+        output.textContent = error?.message || "Không gửi được lời mời.";
+      }
+    }
+
+    async function acceptFriendRequest(request) {
+      const friendshipId = pairId(request.fromUid, request.toUid);
+      const batch = firebaseDb.batch();
+      batch.set(firebaseDb.collection("friendships").doc(friendshipId), {
+        uids: [request.fromUid, request.toUid],
+        users: {
+          [request.fromUid]: { name: request.fromName, avatar: normalizeAvatar(request.fromAvatar) },
+          [request.toUid]: { name: request.toName || state.user.name, avatar: normalizeAvatar(request.toAvatar) || normalizeAvatar(state.user.avatar) }
+        },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      batch.set(firebaseDb.collection("friendRequests").doc(request.id), {
+        status: "accepted",
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      await batch.commit();
+    }
+
+    async function declineFriendRequest(request) {
+      await firebaseDb.collection("friendRequests").doc(request.id).set({
+        status: "declined",
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+    }
+
+    function renderSocial() {
+      renderFriendBadge();
+      renderFriendList(friendList);
+      renderFriendList(modalFriendList);
+      renderIncoming(incomingRequests);
+      renderIncoming(modalIncomingRequests);
+      renderGroupFriendChecks();
+    }
+
+    function renderFriendBadge() {
+      const count = state.incomingRequests.filter((request) => !isBlocked(request.fromUid)).length;
+      friendsBadge.textContent = count > 9 ? "9+" : String(count);
+      friendsBadge.classList.toggle("show", count > 0);
+    }
+
+    function renderFriendList(container) {
+      container.innerHTML = "";
+      if (!state.friends.length) {
+        container.append(emptyLine("Chưa có bạn bè."));
+        return;
+      }
+      state.friends.map(enrichFriend).forEach((friend) => {
+        if (isBlocked(friend.id)) return;
+        const row = document.createElement("div");
+        row.className = "social-row";
+        row.innerHTML = `
+          <button class="avatar-action" type="button" data-chat title="Chat">
+            ${avatarPresenceMarkup(friend.avatar, friend.name, isOnline(friend))}
+          </button>
+          <span>
+            <strong>${escapeHtml(friend.name)}</strong><br>
+            <small class="hint">${friend.nickname ? escapeHtml(friend.actualName) : ""}</small>
+          </span>
+          <span class="social-actions">
+            <button class="secondary" type="button" data-nickname title="Biệt danh">✎</button>
+          </span>
+        `;
+        row.querySelector("[data-chat]").addEventListener("click", () => {
+          closeModals();
+          openConversation(friend);
+        });
+        row.querySelector("[data-nickname]").addEventListener("click", () => setFriendNickname(friend));
+        container.append(row);
+      });
+    }
+
+    async function setFriendNickname(friend) {
+      const current = state.user.nicknames?.[friend.id] || "";
+      const value = prompt("Đặt biệt danh cho bạn bè", current || friend.actualName || friend.name || "");
+      if (value === null) return;
+      const nickname = cleanName(value).slice(0, 24);
+      try {
+        state.user.nicknames = { ...(state.user.nicknames || {}), [friend.id]: nickname };
+        if (!nickname) delete state.user.nicknames[friend.id];
+        await firebaseDb.collection("users").doc(state.user.uid).set({
+          nicknames: { [friend.id]: nickname || firebase.firestore.FieldValue.delete() },
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        renderSocial();
+        renderConversations();
+        if (state.activeConversation?.id === friend.id) {
+          state.activeConversation = enrichFriend(friend);
+          renderActiveChat();
+        }
+      } catch (error) {
+        alert(error?.message || "Không lưu được biệt danh.");
+      }
+    }
+
+    function renderIncoming(container) {
+      container.innerHTML = "";
+      const requests = state.incomingRequests.filter((request) => !isBlocked(request.fromUid));
+      if (!requests.length) {
+        container.append(emptyLine("Không có lời mời mới."));
+        return;
+      }
+      requests.forEach((request) => {
+        const row = document.createElement("div");
+        row.className = "social-row";
+        row.innerHTML = `
+          <span class="chat-avatar">${avatarMarkup(request.fromAvatar, request.fromName)}</span>
+          <span><strong>${escapeHtml(request.fromName || "Bạn bè")}</strong><br><small class="hint">Muốn kết bạn</small></span>
+          <span class="social-actions">
+            <button class="primary" type="button">Đồng ý</button>
+            <button class="secondary" type="button">Từ chối</button>
+          </span>
+        `;
+        const [acceptBtn, declineBtn] = row.querySelectorAll("button");
+        acceptBtn.addEventListener("click", () => acceptFriendRequest(request));
+        declineBtn.addEventListener("click", () => declineFriendRequest(request));
+        container.append(row);
+      });
+    }
+
+    function renderGroupFriendChecks() {
+      groupFriendChecks.innerHTML = "";
+      if (!state.friends.length) {
+        groupFriendChecks.append(emptyLine("Cần có bạn bè để tạo nhóm."));
+        return;
+      }
+      state.friends.map(enrichFriend).forEach((friend) => {
+        const label = document.createElement("label");
+        label.className = "check-row";
+        label.innerHTML = `
+          <input type="checkbox" value="${escapeHtml(friend.id)}">
+          ${avatarPresenceMarkup(friend.avatar, friend.name, isOnline(friend))}
+          <span><strong>${escapeHtml(friend.name)}</strong><br><small class="hint">${escapeHtml(presenceText(friend))}</small></span>
+        `;
+        groupFriendChecks.append(label);
+      });
+    }
+
+    async function createGroupChat() {
+      const selectedIds = [...groupFriendChecks.querySelectorAll("input:checked")].map((input) => input.value);
+      if (selectedIds.length < 2) {
+        groupMessage.textContent = "Cần chọn ít nhất 2 bạn bè.";
+        return;
+      }
+      const selectedFriends = selectedIds
+        .map((id) => state.friends.find((friend) => friend.id === id))
+        .filter(Boolean)
+        .map(enrichFriend);
+      const chatId = `grp_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+      const name = cleanName(groupNameInput.value) || `Nhóm của ${state.user.name}`;
+      const users = {
+        [state.user.uid]: { name: state.user.name, avatar: normalizeAvatar(state.user.avatar) }
+      };
+      selectedFriends.forEach((friend) => {
+        users[friend.id] = { name: friend.actualName || friend.name, avatar: normalizeAvatar(friend.avatar) };
+      });
+      try {
+        await firebaseDb.collection("chats").doc(chatId).set({
+          type: "group",
+          name,
+          avatar: "👥",
+          ownerId: state.user.uid,
+          uids: [state.user.uid, ...selectedIds],
+          users,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+          lastMessage: "Nhóm chat đã được tạo",
+          lastMessageAt: serverTimestamp(),
+          lastSenderId: state.user.uid,
+          reads: { [state.user.uid]: serverTimestamp() }
+        });
+        groupNameInput.value = "";
+        closeModals();
+      } catch (error) {
+        groupMessage.textContent = error?.message || "Không tạo được nhóm.";
+      }
+    }
+
+    async function addFriendToGroup(friendId) {
+      const conversation = state.activeConversation;
+      if (!conversation || conversation.type !== "group" || conversation.ownerId !== state.user.uid) return;
+      const baseFriend = state.friends.find((item) => item.id === friendId);
+      if (!baseFriend) return;
+      const friend = enrichFriend(baseFriend);
+      try {
+        const chatRef = firebaseDb.collection("chats").doc(conversation.id);
+        const notice = `${friend.actualName || friend.name} đã được ${state.user.name} thêm vào nhóm`;
+        await chatRef.set({
+          uids: firebase.firestore.FieldValue.arrayUnion(friend.id),
+          users: {
+            [friend.id]: {
+              name: friend.actualName || friend.name,
+              avatar: normalizeAvatar(friend.avatar)
+            }
+          },
+          lastMessage: notice,
+          lastMessageAt: serverTimestamp(),
+          lastSenderId: state.user.uid,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await chatRef.collection("messages").add({
+          type: "system",
+          senderId: state.user.uid,
+          senderName: state.user.name,
+          text: notice,
+          createdAt: serverTimestamp()
+        });
+        closeFloatingModals();
+      } catch (error) {
+        alert(error?.message || "Không thêm được thành viên.");
+      }
+    }
+
+    async function renameActiveGroup() {
+      const conversation = state.activeConversation;
+      if (!conversation || conversation.type !== "group" || conversation.ownerId !== state.user.uid) return;
+      const newName = cleanName(prompt("Tên nhóm mới", conversation.name) || "").slice(0, 32);
+      if (!newName || newName === conversation.name) return;
+      try {
+        const chatRef = firebaseDb.collection("chats").doc(conversation.id);
+        const notice = `${state.user.name} đã đổi tên nhóm thành ${newName}`;
+        await chatRef.set({
+          name: newName,
+          lastMessage: notice,
+          lastMessageAt: serverTimestamp(),
+          lastSenderId: state.user.uid,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await chatRef.collection("messages").add({
+          type: "system",
+          senderId: state.user.uid,
+          senderName: state.user.name,
+          text: notice,
+          createdAt: serverTimestamp()
+        });
+        state.activeConversation = { ...conversation, name: newName };
+        renderActiveChat();
+        renderConversations();
+      } catch (error) {
+        alert(error?.message || "Không đổi được tên nhóm.");
+      }
+    }
+
+    function renderDetails(forceModal = false) {
+      const conversation = state.activeConversation;
+      if (!conversation) {
+        chatDetails.innerHTML = "Chọn một cuộc trò chuyện để xem thông tin.";
+        return;
+      }
+      const members = conversation.type === "group"
+        ? Object.entries(conversation.users || {}).map(([uid, user]) => ({ uid, ...user }))
+        : [
+          { uid: state.user.uid, name: state.user.name, avatar: normalizeAvatar(state.user.avatar) },
+          { uid: conversation.id, name: conversation.name, avatar: normalizeAvatar(conversation.avatar) }
+        ];
+      const canManage = conversation.type === "group" && conversation.ownerId === state.user.uid;
+      const addable = canManage
+        ? state.friends.map(enrichFriend).filter((friend) => !(conversation.uids || []).includes(friend.id))
+        : [];
+      chatDetails.innerHTML = `
+        <div class="details-section">
+          <h3>${escapeHtml(conversation.name)}</h3>
+          <div class="member-list">
+            ${members.map((member) => `
+              <div class="member-row">
+                <button class="avatar-action" type="button" data-profile-id="${escapeHtml(member.uid || "")}" data-profile-name="${escapeHtml(member.name || "")}" data-profile-avatar="${escapeHtml(member.avatar || "")}">
+                  ${avatarPresenceMarkup(member.avatar, member.name, isOnlineUid(member.uid))}
+                </button>
+                <span><strong>${escapeHtml(member.name || "Thành viên")}</strong><br><small class="hint">${member.uid === conversation.ownerId ? "Chủ nhóm" : "Thành viên"}</small></span>
+              </div>
+            `).join("")}
+          </div>
+          ${conversation.type === "group" ? `<button class="secondary danger" type="button" data-leave-group>Rời nhóm</button>` : ""}
+          ${canManage ? `<button class="secondary" type="button" data-rename-group>Đổi tên nhóm</button>` : ""}
+          ${canManage ? `
+            <h3>Thêm bạn bè vào nhóm</h3>
+            <div class="member-list" id="addMemberList">
+              ${addable.length ? addable.map((friend) => `
+                <div class="member-row">
+                  <button class="avatar-action" type="button" data-profile-id="${escapeHtml(friend.id || "")}" data-profile-name="${escapeHtml(friend.name || "")}" data-profile-avatar="${escapeHtml(friend.avatar || "")}">
+                    ${avatarPresenceMarkup(friend.avatar, friend.name, isOnline(friend))}
+                  </button>
+                  <span><strong>${escapeHtml(friend.name)}</strong><br><small class="hint">${escapeHtml(presenceText(friend))}</small></span>
+                  <button class="secondary" type="button" data-add-member="${escapeHtml(friend.id)}">Thêm</button>
+                </div>
+              `).join("") : `<p class="hint">Không còn bạn bè nào để thêm.</p>`}
+            </div>
+          ` : ""}
+        </div>
+      `;
+      chatDetails.querySelectorAll("[data-add-member]").forEach((button) => {
+        button.addEventListener("click", () => addFriendToGroup(button.dataset.addMember));
+      });
+      bindProfileAvatarClicks(chatDetails);
+      chatDetails.querySelectorAll("[data-leave-group]").forEach((button) => {
+        button.addEventListener("click", leaveActiveGroup);
+      });
+      chatDetails.querySelectorAll("[data-rename-group]").forEach((button) => {
+        button.addEventListener("click", renameActiveGroup);
+      });
+      if (forceModal) {
+        openDetailsModal();
+      }
+    }
+
+    function openDetailsModal() {
+      const modal = document.createElement("div");
+      modal.className = "modal open";
+      modal.innerHTML = `
+        <section class="modal-card">
+          <div class="modal-head">
+            <h2>Thông tin chat</h2>
+            <button class="icon-btn close-btn" type="button" aria-label="Đóng"><img src="assets/close-icon.png" alt=""></button>
+          </div>
+          <div>${chatDetails.innerHTML}</div>
+        </section>
+      `;
+      modal.querySelector("button").addEventListener("click", () => modal.remove());
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) modal.remove();
+      });
+      modal.querySelectorAll("[data-add-member]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await addFriendToGroup(button.dataset.addMember);
+          modal.remove();
+        });
+      });
+      bindProfileAvatarClicks(modal);
+      modal.querySelectorAll("[data-leave-group]").forEach((button) => {
+        button.addEventListener("click", async () => {
+          await leaveActiveGroup();
+          modal.remove();
+        });
+      });
+      modal.querySelectorAll("[data-rename-group]").forEach((button) => {
+        button.addEventListener("click", renameActiveGroup);
+      });
+      document.body.append(modal);
+    }
+
+    async function leaveActiveGroup() {
+      const conversation = state.activeConversation;
+      if (!conversation || conversation.type !== "group" || !state.user) return;
+      if (!confirm("Bạn muốn rời nhóm này?")) return;
+      const remaining = (conversation.uids || []).filter((uid) => uid !== state.user.uid);
+      const ref = firebaseDb.collection("chats").doc(conversation.id);
+      try {
+        if (!remaining.length) {
+          await ref.delete();
+        } else {
+          const patch = {
+            uids: firebase.firestore.FieldValue.arrayRemove(state.user.uid),
+            [`users.${state.user.uid}`]: firebase.firestore.FieldValue.delete(),
+            updatedAt: serverTimestamp()
+          };
+          if (conversation.ownerId === state.user.uid) patch.ownerId = remaining[0];
+          await ref.update(patch);
+        }
+        state.activeConversation = null;
+        stopMessages();
+        renderConversations();
+        renderActiveChat();
+        shell.classList.remove("chat-open");
+      } catch (error) {
+        alert(error?.message || "Không rời nhóm được.");
+      }
+    }
+
+    function chatMetaFor(conversation) {
+      const chatId = chatIdFor(conversation);
+      const remote = state.chatMeta[chatId] || {};
+      const local = state.localChatMeta[chatId] || {};
+      const base = timestampMillis(local.lastMessageAt) > timestampMillis(remote.lastMessageAt)
+        ? { ...remote, ...local }
+        : { ...local, ...remote };
+      base.reads = { ...(remote.reads || {}), ...(local.reads || {}) };
+      return base;
+    }
+
+    function chatIdFor(conversation) {
+      return conversation.type === "group" ? conversation.id : pairId(state.user.uid, conversation.id);
+    }
+
+    function conversationUids(conversation) {
+      return conversation.type === "group"
+        ? Array.from(new Set(conversation.uids || [state.user.uid]))
+        : [state.user.uid, conversation.id].sort();
+    }
+
+    function conversationUsers(conversation) {
+      if (conversation.type === "group") {
+        return {
+          ...(conversation.users || {}),
+          [state.user.uid]: { name: state.user.name, avatar: normalizeAvatar(state.user.avatar) }
+        };
+      }
+      return {
+        [state.user.uid]: { name: state.user.name, avatar: normalizeAvatar(state.user.avatar) },
+        [conversation.id]: { name: conversation.actualName || conversation.name, avatar: normalizeAvatar(conversation.avatar) }
+      };
+    }
+
+    function unreadFor(conversation) {
+      if (state.activeConversation?.id === conversation.id) return 0;
+      const meta = chatMetaFor(conversation);
+      const readAt = timestampMillis(meta.reads?.[state.user.uid]);
+      const lastAt = timestampMillis(meta.lastMessageAt);
+      if (isBlocked(meta.lastSenderId)) return 0;
+      return meta.lastSenderId && meta.lastSenderId !== state.user.uid && lastAt > readAt ? 1 : 0;
+    }
+
+    async function markRead(conversation) {
+      if (!conversation || !firebaseDb || !state.user) return;
+      const chatId = chatIdFor(conversation);
+      state.localChatMeta[chatId] = {
+        ...(state.localChatMeta[chatId] || {}),
+        reads: {
+          ...(state.localChatMeta[chatId]?.reads || {}),
+          [state.user.uid]: Date.now()
+        }
+      };
+      if (state.user.settings?.showRead === false) {
+        renderConversations();
+        return;
+      }
+      try {
+        await firebaseDb.collection("chats").doc(chatId).set({
+          reads: { [state.user.uid]: serverTimestamp() }
+        }, { merge: true });
+      } catch (_) {}
+    }
+
+    function seenText(message, conversation) {
+      if (state.user?.settings?.showRead === false) return "";
+      const meta = chatMetaFor(conversation);
+      const messageAt = timestampMillis(message.createdAt);
+      if (conversation.type === "group") {
+        const seen = (conversation.uids || [])
+          .filter((uid) => uid !== state.user.uid)
+          .filter((uid) => timestampMillis(meta.reads?.[uid]) >= messageAt)
+          .length;
+        return seen ? `Đã xem ${seen}` : "Đã gửi";
+      }
+      const readAt = timestampMillis(meta.reads?.[conversation.id]);
+      return readAt >= messageAt ? "Đã xem" : "Đã gửi";
+    }
+
+    function typingText(conversation) {
+      const typing = chatMetaFor(conversation).typing || {};
+      const names = Object.entries(typing)
+        .filter(([uid]) => uid !== state.user?.uid)
+        .filter(([, info]) => {
+          const at = timestampMillis(info?.at);
+          return !at || Date.now() - at < 9000;
+        })
+        .map(([, info]) => cleanName(info?.name || "Ai đó"))
+        .filter(Boolean);
+      if (!names.length) return "";
+      if (names.length === 1) return `${names[0]} đang soạn tin nhắn...`;
+      return `${names.length} người đang soạn tin nhắn...`;
+    }
+
+    function showSocialError(error) {
+      socialMessage.textContent = error?.message || "Không tải được dữ liệu chat.";
+    }
+
+    function openModal(selector) {
+      renderAuthState();
+      document.querySelector(selector).classList.add("open");
+    }
+
+    function closeModals() {
+      document.querySelectorAll(".modal").forEach((modal) => modal.classList.remove("open"));
+    }
+
+    function closeFloatingModals() {
+      document.querySelectorAll(".modal.open").forEach((modal) => {
+        if (modal.id) modal.classList.remove("open");
+        else modal.remove();
+      });
+    }
+
+    function emptyLine(text) {
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.textContent = text;
+      return p;
+    }
+
+    function setAvatar(element, avatar, name = "") {
+      element.innerHTML = avatarMarkup(avatar, name);
+    }
+
+    function avatarPresenceMarkup(avatar, name = "", online = false) {
+      return `
+        <span class="avatar-frame">
+          <span class="chat-avatar">${avatarMarkup(avatar, name)}</span>
+          ${online ? `<span class="online-dot"></span>` : ""}
+        </span>
+      `;
+    }
+
+    function avatarMarkup(avatar, name = "") {
+      const imageAvatar = normalizeAvatar(avatar);
+      if (imageAvatar) return `<img src="${escapeHtml(imageAvatar)}" alt="">`;
+      const [g1, g2] = gradientForName(name || avatar || "?");
+      return `<span class="avatar-initials" style="--g1: ${g1}; --g2: ${g2};">${escapeHtml(initials(name || avatar))}</span>`;
+    }
+
+    function normalizeAvatar(avatar) {
+      const value = String(avatar || "").trim();
+      if (value.startsWith("data:image/") || /^https?:\/\//.test(value)) return value;
+      return "";
+    }
+
+    function gradientForName(name) {
+      const key = accountKeyFromName(name);
+      let total = 0;
+      for (const char of key) total += char.charCodeAt(0);
+      return avatarGradients[total % avatarGradients.length] || avatarGradients[0];
+    }
+
+    function initials(name) {
+      return cleanName(name).split(" ").slice(0, 2).map((part) => part[0] || "").join("").toUpperCase() || "?";
+    }
+
+    function isOnline(friend) {
+      const lastActive = timestampMillis(friend.presence?.lastActive);
+      return Boolean(friend.presence?.online && (!lastActive || Date.now() - lastActive < 45000));
+    }
+
+    function isOnlineUid(uid) {
+      if (!uid) return false;
+      if (uid === state.user?.uid) return true;
+      return isOnline({ presence: state.friendProfiles[uid]?.presence || {} });
+    }
+
+    function bindProfileAvatarClicks(root) {
+      root.querySelectorAll("[data-profile-id]").forEach((button) => {
+        button.addEventListener("click", () => openUserProfile(button.dataset.profileId, {
+          name: button.dataset.profileName,
+          avatar: button.dataset.profileAvatar
+        }));
+      });
+    }
+
+    function openActiveAvatarProfile() {
+      const conversation = state.activeConversation;
+      if (!conversation) return;
+      if (conversation.type === "group") {
+        renderDetails(true);
+        return;
+      }
+      openUserProfile(conversation.id, conversation);
+    }
+
+    async function openUserProfile(uid, fallback = {}) {
+      if (!uid) return;
+      if (uid === state.user?.uid) {
+        openModal("#profileModal");
+        return;
+      }
+      let profile = {
+        uid,
+        name: cleanName(fallback.actualName || fallback.name || "Bạn bè"),
+        avatar: normalizeAvatar(fallback.avatar),
+        cover: "",
+        bio: "",
+        createdAt: null,
+        presence: fallback.presence || state.friendProfiles[uid]?.presence || {}
+      };
+      try {
+        const doc = await firebaseDb.collection("users").doc(uid).get();
+        if (doc.exists) {
+          const data = doc.data() || {};
+          profile = {
+            ...profile,
+            name: cleanName(data.name || profile.name),
+            avatar: normalizeAvatar(data.avatar) || profile.avatar,
+            cover: normalizeAvatar(data.cover),
+            bio: cleanName(data.bio || ""),
+            createdAt: data.createdAt || null,
+            presence: data.presence || profile.presence
+          };
+        }
+      } catch (_) {}
+      openProfileView(profile);
+    }
+
+    function openProfileView(profile) {
+      const modal = document.createElement("div");
+      modal.className = "modal open";
+      const coverStyle = profile.cover
+        ? ` style="background-image: linear-gradient(180deg, transparent, rgba(0,0,0,0.55)), url('${escapeHtml(profile.cover)}')"`
+        : "";
+      const friend = isFriend(profile.uid);
+      const blocked = isBlocked(profile.uid);
+      modal.innerHTML = `
+        <section class="modal-card profile-view">
+          <div class="modal-head">
+            <h2>Profile</h2>
+            <button class="icon-btn close-btn" type="button" aria-label="Đóng"><img src="assets/close-icon.png" alt=""></button>
+          </div>
+          <div class="profile-hero">
+            <div class="profile-cover ${profile.cover ? "has-image" : ""}"${coverStyle}>
+            </div>
+            <span class="avatar profile-avatar">${avatarMarkup(profile.avatar, profile.name)}</span>
+            <div class="profile-info">
+              <div class="me-name">${escapeHtml(profile.name)}</div>
+              <div class="hint"><span class="presence-dot ${isOnline({ presence: profile.presence }) ? "online" : ""}"></span>${escapeHtml(presenceText({ ...profile, type: "direct" }))}</div>
+            </div>
+            <span class="profile-created">${profile.createdAt ? `Tạo ngày ${escapeHtml(formatDate(profile.createdAt))}` : ""}</span>
+          </div>
+          <p class="hint">${escapeHtml(profile.bio || "Chưa có bio.")}</p>
+          <div class="profile-actions">
+            ${!friend && !blocked ? `<button class="primary" type="button" data-add-friend>Kết bạn</button>` : ""}
+            <button class="secondary danger" type="button" data-toggle-block>${blocked ? "Bỏ chặn" : "Chặn"}</button>
+          </div>
+          <p class="hint" data-profile-message></p>
+        </section>
+      `;
+      modal.querySelector("button").addEventListener("click", () => modal.remove());
+      const output = modal.querySelector("[data-profile-message]");
+      modal.querySelector("[data-add-friend]")?.addEventListener("click", () => sendFriendRequestToProfile(profile, output));
+      modal.querySelector("[data-toggle-block]")?.addEventListener("click", () => toggleBlockProfile(profile, modal, output));
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) modal.remove();
+      });
+      document.body.append(modal);
+    }
+
+    function isFriend(uid) {
+      return state.friends.some((friend) => friend.id === uid);
+    }
+
+    function isBlocked(uid) {
+      return Boolean(state.user?.blocked?.[uid]);
+    }
+
+    async function sendFriendRequestToProfile(profile, output) {
+      if (!profile?.uid || !state.user || profile.uid === state.user.uid) return;
+      if (isFriend(profile.uid)) {
+        output.textContent = "Hai người đã là bạn bè.";
+        return;
+      }
+      try {
+        output.textContent = "Đang gửi lời mời...";
+        const requestId = pairId(state.user.uid, profile.uid);
+        await firebaseDb.collection("friendRequests").doc(requestId).set({
+          fromUid: state.user.uid,
+          fromName: state.user.name,
+          fromAvatar: normalizeAvatar(state.user.avatar),
+          toUid: profile.uid,
+          toName: profile.name,
+          toAvatar: normalizeAvatar(profile.avatar),
+          status: "pending",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        output.textContent = "Đã gửi lời mời kết bạn.";
+      } catch (error) {
+        output.textContent = error?.message || "Không gửi được lời mời.";
+      }
+    }
+
+    async function toggleBlockProfile(profile, modal, output) {
+      if (!profile?.uid || !state.user || profile.uid === state.user.uid) return;
+      const currentlyBlocked = isBlocked(profile.uid);
+      try {
+        output.textContent = currentlyBlocked ? "Đang bỏ chặn..." : "Đang chặn...";
+        if (!state.user.blocked) state.user.blocked = {};
+        if (currentlyBlocked) {
+          delete state.user.blocked[profile.uid];
+        } else {
+          state.user.blocked[profile.uid] = true;
+        }
+        await firebaseDb.collection("users").doc(state.user.uid).set({
+          blocked: {
+            [profile.uid]: currentlyBlocked ? firebase.firestore.FieldValue.delete() : true
+          },
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        if (!currentlyBlocked && state.activeConversation?.type === "direct" && state.activeConversation.id === profile.uid) {
+          state.activeConversation = null;
+          stopMessages();
+          shell.classList.remove("chat-open");
+          renderActiveChat();
+        }
+        renderSocial();
+        renderConversations();
+        modal.remove();
+        openProfileView(profile);
+      } catch (error) {
+        output.textContent = error?.message || "Không cập nhật chặn được.";
+      }
+    }
+
+    function presenceText(friend) {
+      if (friend.type === "group") return `${friend.uids?.length || 0} thành viên`;
+      if (isOnline(friend)) return "Online";
+      const lastActive = timestampMillis(friend.presence?.lastActive);
+      return lastActive ? `Online ${relativeTime(lastActive)} trước` : "Offline";
+    }
+
+    function relativeTime(ms) {
+      const diff = Math.max(0, Date.now() - ms);
+      const minute = 60000;
+      const hour = 60 * minute;
+      const day = 24 * hour;
+      if (diff < 45000) return "vừa xong";
+      if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))} phút`;
+      if (diff < day) return `${Math.max(1, Math.floor(diff / hour))} giờ`;
+      return `${Math.max(1, Math.floor(diff / day))} ngày`;
+    }
+
+    function shortTime(timestamp) {
+      const date = timestamp?.toDate ? timestamp.toDate() : typeof timestamp === "number" ? new Date(timestamp) : null;
+      if (!date) return "";
+      const now = new Date();
+      const sameDay = date.toDateString() === now.toDateString();
+      return sameDay
+        ? date.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+        : date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" });
+    }
+
+    function formatDate(timestamp) {
+      const date = timestamp?.toDate ? timestamp.toDate() : typeof timestamp === "number" ? new Date(timestamp) : null;
+      return date ? date.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }) : "";
+    }
+
+    function timestampMillis(value) {
+      if (!value) return 0;
+      if (typeof value.toMillis === "function") return value.toMillis();
+      if (typeof value.toDate === "function") return value.toDate().getTime();
+      if (value instanceof Date) return value.getTime();
+      if (typeof value === "number") return value;
+      return 0;
+    }
+
+    function withTimeout(promise, timeoutMs) {
+      return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), timeoutMs))
+      ]);
+    }
+
+    function resizeImage(file, maxSize = 1280, quality = 0.8) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Không đọc được ảnh."));
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => reject(new Error("Ảnh không hợp lệ."));
+          img.onload = () => {
+            const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+            const width = Math.max(1, Math.round(img.width * scale));
+            const height = Math.max(1, Math.round(img.height * scale));
+            const canvas = document.createElement("canvas");
+            canvas.width = width;
+            canvas.height = height;
+            canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function safeFileName(name) {
+      return name.toLowerCase().replace(/[^a-z0-9.]+/g, "-").replace(/^-+|-+$/g, "") || "image.jpg";
+    }
+
+    function serverTimestamp() {
+      return firebase.firestore.FieldValue.serverTimestamp();
+    }
+
+    function pairId(a, b) {
+      return [a, b].sort().join("_");
+    }
+
+    function accountEmailFromName(name) {
+      return `${accountKeyFromName(name)}@sever-aa8f6.firebaseapp.com`;
+    }
+
+    function accountKeyFromName(name) {
+      return normalizeSearch(name)
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40) || "nguoi-choi";
+    }
+
+    function cleanName(text) {
+      return String(text || "").trim().replace(/\s+/g, " ");
+    }
+
+    function cleanMessage(text) {
+      return String(text || "")
+        .replace(/\r\n/g, "\n")
+        .replace(/[ \t]+\n/g, "\n")
+        .replace(/\n{4,}/g, "\n\n\n")
+        .trim();
+    }
+
+    function normalizeSearch(text) {
+      return cleanName(text)
+        .toLocaleLowerCase("vi")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d");
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = String(text || "");
+      return div.innerHTML;
+    }
+
+    function authErrorText(error) {
+      const code = error?.code || "";
+      if (code.includes("email-already-in-use")) return "Tên tài khoản này đã có người dùng.";
+      if (code.includes("user-not-found") || code.includes("wrong-password") || code.includes("invalid-credential")) return "Sai mật khẩu hoặc tên người dùng.";
+      if (code.includes("weak-password")) return "Password quá yếu, dùng ít nhất 6 kí tự.";
+      if (code.includes("network-request-failed")) return "Không có mạng nên Firebase chưa đăng nhập được.";
+      return error?.message || "Lỗi đăng nhập.";
+    }
+
+    function savePin() {
+      const value = pinInput.value.trim();
+      if (!/^\d{4,8}$/.test(value)) {
+        settingsMessage.textContent = "PIN cần 4-8 số.";
+        return;
+      }
+      localStorage.setItem("chatAppPin", value);
+      pinInput.value = "";
+      settingsMessage.textContent = "Đã lưu PIN.";
+    }
+
+    function clearPin() {
+      localStorage.removeItem("chatAppPin");
+      pinInput.value = "";
+      settingsMessage.textContent = "Đã xóa PIN.";
+    }
+
+    async function savePrivacySettings() {
+      if (!state.user || !firebaseDb) return;
+      state.user.settings = {
+        ...(state.user.settings || {}),
+        showRead: showReadToggle.checked,
+        showOnline: showOnlineToggle.checked
+      };
+      settingsMessage.textContent = "Đang lưu cài đặt...";
+      try {
+        await firebaseDb.collection("users").doc(state.user.uid).set({
+          settings: state.user.settings,
+          updatedAt: serverTimestamp()
+        }, { merge: true });
+        await updatePresence(true);
+        renderAuthState();
+        settingsMessage.textContent = "Đã lưu cài đặt.";
+      } catch (error) {
+        settingsMessage.textContent = error?.message || "Không lưu được cài đặt.";
+      }
+    }
+
+    function showPinLock() {
+      if (!state.user || !localStorage.getItem("chatAppPin")) return;
+      pinUnlockInput.value = "";
+      pinLockMessage.textContent = "App đã khóa vì bạn vừa chuyển tab.";
+      $("#pinLockModal").classList.add("open");
+      setTimeout(() => pinUnlockInput.focus(), 40);
+    }
+
+    function unlockPin() {
+      const expected = localStorage.getItem("chatAppPin");
+      if (!expected) {
+        $("#pinLockModal").classList.remove("open");
+        return;
+      }
+      if (pinUnlockInput.value.trim() !== expected) {
+        pinLockMessage.textContent = "Sai PIN.";
+        pinUnlockInput.select();
+        return;
+      }
+      state.pinShouldLock = false;
+      $("#pinLockModal").classList.remove("open");
+      pinUnlockInput.value = "";
+    }
+
+    document.addEventListener("visibilitychange", () => {
+      if (!state.user || !localStorage.getItem("chatAppPin")) return;
+      if (document.visibilityState === "hidden") {
+        state.pinShouldLock = true;
+      } else if (state.pinShouldLock) {
+        showPinLock();
+      }
+    });
+
+    window.addEventListener("pagehide", () => updatePresence(false));
+  </script>
+</body>
+</html>
